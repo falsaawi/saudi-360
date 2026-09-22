@@ -177,6 +177,11 @@
   <p data-t="attr2"></p>
 </footer>
 
+<script>
+  // Where the Parquet warehouse is served from. "data" is the local copy used
+  // while developing; in production this is the R2 bucket's public URL.
+  window.SAUDI360_DATA_BASE = "data";
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <script>
 const T={
@@ -197,6 +202,7 @@ const T={
   sql_unavail:"The query engine could not start in this view. It needs the deployed site; the published data files are listed in the manifest.",
   sql_rows:"{n} rows in {ms} ms",sql_err:"Query failed",
   sql_ex:"Examples",sql_limit:"Showing the first 500 rows.",
+  sql_nodata:"The data files are not published at this address yet. The engine loaded correctly; it has nothing to read.",
   p_cat:"Every product GASTAT publishes, in the groups it publishes them under. A number beside a product is how many series it contributes to the charts; products without one are catalogued but not charted.",
   h_all:"All products",
   search:"Search products and series…",
@@ -240,6 +246,7 @@ const T={
   sql_unavail:"تعذّر تشغيل محرك الاستعلام في هذا العرض. يحتاج إلى الموقع المنشور.",
   sql_rows:"{n} صفًا في {ms} مللي ثانية",sql_err:"فشل الاستعلام",
   sql_ex:"أمثلة",sql_limit:"تُعرض أول ٥٠٠ صف.",
+  sql_nodata:"ملفات البيانات غير منشورة على هذا العنوان بعد. المحرك يعمل، لكن لا توجد بيانات ليقرأها.",
   p_cat:"جميع منتجات الهيئة ضمن المجموعات التي تنشرها بها. الرقم بجانب المنتج هو عدد السلاسل التي يسهم بها في الرسوم؛ والمنتجات بلا رقم مفهرسة لكن غير مرسومة.",
   h_all:"جميع المنتجات",
   search:"ابحث في المنتجات والسلاسل…",
@@ -825,7 +832,11 @@ async function wireData(){
   if(ex)ex.onclick=e=>{const b=e.target.closest("[data-i]"); if(!b)return;
     $("#sql").value=EXAMPLES[+b.dataset.i][1];};
   const d=await duckReady();
-  if(!d){ if(stat){stat.textContent=T_.sql_unavail;} return; }
+  if(!d){
+    const missing=duckErr&&/No files found|404|Failed to fetch/i.test(String(duckErr.message||duckErr));
+    if(stat)stat.textContent=missing?T_.sql_nodata:T_.sql_unavail;
+    return;
+  }
   try{
     const r=await d.con.query("SELECT (SELECT count(*) FROM fact_observation) AS n, (SELECT count(*) FROM dim_product) AS p");
     const row=r.toArray()[0];
