@@ -1,0 +1,313 @@
+"""
+Saudi 360 — export the warehouse to static JSON for the site.
+
+    python export_site.py
+
+318,686 series is far more than a page should ship, so this picks what is worth
+showing and writes site/app.json:
+
+  * per product: the longest, most distinct time series (headline first)
+  * per product: the latest-period breakdown, for bar and share charts
+  * per product: coverage, releases and provenance
+  * cross-product: a comparison set indexed to 100 for the explorer
+
+Selection favours series with a real time axis and a single index base, because
+those are the ones that can honestly be drawn as a line.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import re
+from pathlib import Path
+
+import duckdb
+
+ROOT = Path(__file__).parent
+DB = ROOT / "data" / "saudi360.duckdb"
+OUT = ROOT / "site" / "app.json"
+
+MAX_SERIES_PER_PRODUCT = 45
+MIN_POINTS = 3
+MAX_BREAKDOWN = 20
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-7s %(message)s",
+                    datefmt="%H:%M:%S")
+log = logging.getLogger("export")
+
+HEADLINE = re.compile(r"general index|total|الاجمالي|الرقم القياسي العام|overall", re.I)
+NOISE = re.compile(r"^\s*(s/?n|no\.?|code|رمز|م)\s*$", re.I)
+
+
+def tidy(label: str) -> str:
+    out = " ".join((label or "").split())
+    if out.isupper() and len(out) > 3:
+        out = out.title()
+    return out
+
+
+# Headline indicators for the front page. Each is pinned to one exact series
+# rather than found by heuristic, and each has been checked against the figure
+# GASTAT states in prose in its own PDF release. A spec that does not resolve to
+# exactly one series is dropped with a warning: a front-page number that might
+# be the wrong column is worse than no number at all.
+HEADLINES = [
+    {"id": "inflation", "en": "Inflation", "ar": "التضخم",
+     "note_en": "Consumer price index, annual change",
+     "note_ar": "الرقم القياسي لأسعار المستهلك، التغير السنوي",
+     "category": "121421", "table": "2.1", "row": "general index", "kind": "change",
+     "col_like": "percent change in%", "unit": "%", "scale": 1, "verified": "GASTAT: 1.8%"},
+    {"id": "unemp_all", "en": "Unemployment rate", "ar": "معدل البطالة",
+     "note_en": "All residents, Saudi and non-Saudi",
+     "note_ar": "لجميع السكان، سعوديين وغير سعوديين",
+     "category": "417515", "table": "1", "row": "unemployment rate", "kind": None,
+     "col": "total", "unit": "%", "scale": 1, "verified": "GASTAT: 3.1%"},
+    {"id": "unemp_saudi", "en": "Saudi unemployment", "ar": "بطالة السعوديين",
+     "note_en": "Saudi nationals only",
+     "note_ar": "السعوديون فقط",
+     "category": "417515", "table": "1", "row": "unemployment rate", "kind": None,
+     "col": "saudi total", "unit": "%", "scale": 1, "verified": "GASTAT: 6.4%"},
+    {"id": "participation", "en": "Saudi participation", "ar": "مشاركة السعوديين",
+     "note_en": "Labour force participation, Saudi nationals",
+     "note_ar": "معدل المشاركة في القوى العاملة، السعوديون",
+     "category": "417515", "table": "1", "row": "labour force participation rate",
+     "kind": None, "col": "saudi total", "unit": "%", "scale": 1, "verified": "GASTAT: 49.0%"},
+    {"id": "ipi", "en": "Industrial production", "ar": "الإنتاج الصناعي",
+     "note_en": "Industrial production index, annual change",
+     "note_ar": "الرقم القياسي للإنتاج الصناعي، التغير السنوي",
+     "category": "123454", "table": None, "row": "general index", "kind": "change",
+     "col": "rate of change annual", "unit": "%", "scale": 100, "verified": "GASTAT: -8.1%"},
+]
+
+
+def resolve_headlines(con) -> list[dict]:
+    """Resolve each headline spec to one number, or drop it.
+
+    The safety property is not "one series" but "one value": the CPI change
+    column carries the month in its own name ("Percent Change in August 2026
+    from 2025-08-01"), so the series changes every release while still being the
+    same measure. What matters is that at the latest period the spec matches
+    exactly one distinct value -- otherwise the front page would be picking.
+    """
+    out = []
+    for h in HEADLINES:
+        where = ["category_id = ?", "lower(row_en) = ?"]
+        args: list = [h["category"], h["row"]]
+        if h.get("table"):
+            where.append("table_name = ?")
+            args.append(h["table"])
+        if h.get("kind"):
+            where.append("kind = ?")
+            args.append(h["kind"])
+        if h.get("col_like"):
+            where.append("lower(col_en) LIKE ?")
+            args.append(h["col_like"])
+        elif h.get("col") is not None:
+            where.append("lower(col_en) = ?")
+            args.append(h["col"])
+        rows = con.execute(f"""
+            SELECT period, value, source_file
+            FROM v_observation WHERE {' AND '.join(where)}
+            ORDER BY period DESC
+        """, args).fetchall()
+        if not rows:
+            log.warning("headline %-14s no match - dropped", h["id"])
+            continue
+        latest = rows[0][0]
+        at_latest = [r for r in rows if r[0] == latest]
+        values = {round(r[1], 6) for r in at_latest}
+        if len(values) > 1:
+            log.warning("headline %-14s %s gives %d different values - dropped",
+                        h["id"], latest, len(values))
+            continue
+        period, value, src = at_latest[0]
+        out.append({k: h[k] for k in ("id", "en", "ar", "note_en", "note_ar", "unit", "verified")}
+                   | {"category": h["category"], "period": period,
+                      "value": round(value * h["scale"], 2), "source": src})
+        log.info("headline %-14s %-9s %8.2f%s  (%s)", h["id"], period,
+                 value * h["scale"], h["unit"], h["verified"])
+    return out
+
+
+def arabic_names() -> dict:
+    """Arabic product and sub-domain names from the Arabic taxonomy crawl.
+
+    16 of the 20 products have one; the four archived series are absent from the
+    live Arabic taxonomy, so those keep their English name rather than a guess.
+    """
+    path = ROOT / "data" / "catalog" / "taxonomy.json"
+    if not path.exists():
+        return {}
+    tax = json.loads(path.read_text("utf-8"))
+    return {p["category_id"]: p for p in tax.get("ar", [])}
+
+
+def main() -> int:
+    con = duckdb.connect(str(DB), read_only=True)
+    ar = arabic_names()
+
+    products = con.execute("""
+        SELECT category_id, product, domain, subdomain, n_releases,
+               n_series, n_observations, first_period, last_period
+        FROM v_product_coverage ORDER BY product
+    """).fetchall()
+
+    app = {"products": [], "domains": {}, "headlines": resolve_headlines(con),
+           "generated": con.execute(
+        "SELECT max(last_period) FROM v_product_coverage").fetchone()[0]}
+
+    for cat, name, domain, sub, n_rel, n_ser, n_obs, first, last in products:
+        # Candidate series: long enough to draw, on one base, not an index column
+        # of row numbers.
+        cand = con.execute("""
+            SELECT series_key, row_en, row_ar, col_en, col_ar, kind, index_base,
+                   n_points, first_period, last_period, period_type
+            FROM v_series_span
+            WHERE category_id = ? AND n_points >= ? AND kind <> 'weight'
+              -- a series that mixes index levels with percentage changes draws a
+              -- plausible-looking but meaningless line; keep those off the charts
+              AND series_key NOT IN (SELECT series_key FROM v_suspect_series)
+              -- and never chart a value the source does not pin down uniquely
+              AND series_key NOT IN (SELECT series_key FROM v_ambiguous_series)
+              -- A series that never moves is not a measurement. Several tables
+              -- carry a row-number column headed "Index", which parses as a long
+              -- constant series and, being long, outranks the real indicators
+              -- unless it is dropped BEFORE the selection rather than after.
+              AND series_key IN (
+                  SELECT series_key FROM fact_observation
+                  GROUP BY series_key HAVING MIN(value) <> MAX(value)
+              )
+            ORDER BY n_points DESC, row_en
+        """, [cat, MIN_POINTS]).fetchall()
+
+        chosen, seen_rows = [], set()
+
+        def score(r):
+            """Rank candidates the way a reader would expect to meet them.
+
+            A national headline beats the same headline broken out by city, even
+            though the city series run longer: "General Index" for the country is
+            the number people come for, and it loses a plain length contest to
+            sixteen city series carrying the same row label.
+            """
+            row_label, col_label, kind = r[1] or "", r[3] or "", r[5]
+            headline = bool(HEADLINE.search(f"{row_label} {col_label}"))
+            aggregate = not col_label.strip()
+            # A bare "value" on a headline row is usually the artefact of a code
+            # or level column, not a measure; real headlines are index or change.
+            measured = kind in ("index", "change")
+            if headline and aggregate and measured:
+                tier = 0
+            elif headline and aggregate:
+                tier = 1
+            elif headline:
+                tier = 2
+            else:
+                tier = 3
+            return (tier, -r[7])
+        for r in sorted(cand, key=score):
+            # Some tables label rows in Arabic only. Requiring an English label
+            # threw those series away entirely -- for two products, all of them.
+            # The Arabic label is the label; the site falls back to it.
+            row_label = tidy(r[1]) or tidy(r[2])
+            col_label = tidy(r[3]) or tidy(r[4])
+            if NOISE.match(row_label) or NOISE.match(col_label):
+                continue
+            if not row_label and not col_label:
+                continue
+            ident = (row_label.lower(), col_label.lower())
+            if ident in seen_rows:
+                continue
+            seen_rows.add(ident)
+            chosen.append(r)
+            if len(chosen) >= MAX_SERIES_PER_PRODUCT:
+                break
+
+        series = []
+        for r in chosen:
+            pts = con.execute("""
+                SELECT period, value FROM fact_observation
+                WHERE series_key = ? ORDER BY period
+            """, [r[0]]).fetchall()
+            if len(pts) < MIN_POINTS:
+                continue
+            # A line that never moves carries no information and, when it is a
+            # run of zeros from a code column, is not a measurement at all.
+            vals = [v for _, v in pts]
+            if max(vals) == min(vals):
+                continue
+            series.append({
+                "id": r[0][:12],
+                "row": tidy(r[1]), "row_ar": " ".join((r[2] or "").split()),
+                "col": tidy(r[3]), "col_ar": " ".join((r[4] or "").split()),
+                "kind": r[5], "base": r[6] or None, "freq": r[10],
+                "pts": [[p, round(v, 3)] for p, v in pts],
+            })
+
+        breakdown = con.execute("""
+            WITH latest AS (SELECT max(period) AS p FROM v_observation WHERE category_id = ?)
+            SELECT row_en, row_ar, col_en, value, weight_pct
+            FROM v_observation, latest
+            WHERE category_id = ? AND period = latest.p AND kind <> 'weight'
+              AND row_en <> '' AND value IS NOT NULL
+            ORDER BY abs(value) DESC LIMIT ?
+        """, [cat, cat, MAX_BREAKDOWN]).fetchall()
+
+        releases = con.execute("""
+            SELECT DISTINCT r.pub_id, r.title, r.source_file, r.max_period
+            FROM dim_release r WHERE r.category_id = ?
+            ORDER BY r.max_period DESC LIMIT 12
+        """, [cat]).fetchall()
+
+        bases = [b[0] for b in con.execute("""
+            SELECT DISTINCT index_base FROM dim_series
+            WHERE category_id = ? AND index_base <> '' ORDER BY index_base
+        """, [cat]).fetchall()]
+
+        a = ar.get(cat, {})
+        app["products"].append({
+            "id": cat, "name": name, "domain": domain, "subdomain": sub,
+            "name_ar": a.get("product", ""), "subdomain_ar": a.get("subdomain", ""),
+            "domain_ar": a.get("domain", ""),
+            "releases": n_rel, "n_series": n_ser, "n_obs": n_obs,
+            "first": first, "last": last, "bases": bases,
+            "series": series,
+            "breakdown": [{"row": tidy(b[0]), "row_ar": " ".join((b[1] or "").split()),
+                           "col": tidy(b[2]), "value": round(b[3], 3),
+                           "weight": round(b[4], 3) if b[4] is not None else None}
+                          for b in breakdown],
+            "recent": [{"pub": r[0], "title": r[1], "file": r[2], "period": r[3]}
+                       for r in releases],
+        })
+        log.info("  %-44s %2d series  %2d breakdown", name[:44], len(series), len(breakdown))
+
+    for p in app["products"]:
+        d = app["domains"].setdefault(p["domain"], {"products": 0, "obs": 0, "series": 0})
+        d["products"] += 1
+        d["obs"] += p["n_obs"]
+        d["series"] += p["n_series"]
+
+    suspects = con.execute("SELECT COUNT(*) FROM v_suspect_series").fetchone()[0]
+    log.info("excluded %d mixed-measure series from charts", suspects)
+
+    totals = con.execute("""
+        SELECT (SELECT COUNT(*) FROM fact_observation),
+               (SELECT COUNT(*) FROM dim_series),
+               (SELECT COUNT(*) FROM dim_release),
+               (SELECT COUNT(*) FROM fact_revision)
+    """).fetchone()
+    app["totals"] = {"observations": totals[0], "series": totals[1],
+                     "releases": totals[2], "revisions": totals[3],
+                     "products": len(app["products"]), "excluded": suspects}
+
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(json.dumps(app, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    log.info("wrote %s (%.1f MB)", OUT, OUT.stat().st_size / 1048576)
+    log.info("totals: %s", app["totals"])
+    con.close()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

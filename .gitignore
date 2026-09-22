@@ -1,0 +1,35 @@
+# The collected corpus is 3.1 GB and is reproducible from GASTAT by re-running
+# the crawler, so it does not belong in version control. The catalogue that
+# indexes it does belong: it is the record of what was collected and when.
+#
+# Note: git has no inline comments. A comment after a pattern on the same line
+# becomes part of the pattern and the rule silently matches nothing.
+
+# 1.29 GB of source spreadsheets and PDFs
+data/files/
+
+# 1.6 GB of parser output, rebuilt by run_parse_all.py
+data/parsed/
+
+# 260 MB warehouse, rebuilt by build_warehouse_all.py
+data/*.duckdb
+data/*.duckdb.wal
+
+# crawl resume state and build logs, machine-specific
+data/checkpoint.json
+data/*.log
+
+# phase-0 sample workbooks and scratch output
+recon/samples/
+recon/*.html
+recon/inventory*.json
+recon/releases.json
+
+# Parquet staging for R2, and the local copy used to test the query page
+dist/
+site/data/
+
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

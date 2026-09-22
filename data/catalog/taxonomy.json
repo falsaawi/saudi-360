@@ -1,0 +1,1002 @@
+{
+ "en": [
+  {
+   "category_id": "120038",
+   "product": "Gross Domestic Product Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "National Accounts Statistics"
+  },
+  {
+   "category_id": "419265",
+   "product": "Supply and Use Tables and Input - Output Tables",
+   "domain": "Economic Statistics",
+   "subdomain": "National Accounts Statistics"
+  },
+  {
+   "category_id": "2197212",
+   "product": "Comprehensive Economic Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Comprehensive Economic Statistics"
+  },
+  {
+   "category_id": "122941",
+   "product": "Digital Economy Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Digital Economy Statistics"
+  },
+  {
+   "category_id": "122971",
+   "product": "Access and Use of Information and Communications Technology for Families and Individuals",
+   "domain": "Economic Statistics",
+   "subdomain": "Digital Economy Statistics"
+  },
+  {
+   "category_id": "127305",
+   "product": "Access and Use of Information and Communications Technology for Establishments",
+   "domain": "Economic Statistics",
+   "subdomain": "Digital Economy Statistics"
+  },
+  {
+   "category_id": "121421",
+   "product": "Consumer Prices Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Prices Statistics"
+  },
+  {
+   "category_id": "122852",
+   "product": "Wholesale Prices Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Prices Statistics"
+  },
+  {
+   "category_id": "121920",
+   "product": "Real Estate Prices Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Prices Statistics"
+  },
+  {
+   "category_id": "121662",
+   "product": "Price Averages Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Prices Statistics"
+  },
+  {
+   "category_id": "3453505",
+   "product": "The Construction Cost Index Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Prices Statistics"
+  },
+  {
+   "category_id": "10329368",
+   "product": "Producer Price Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Prices Statistics"
+  },
+  {
+   "category_id": "123038",
+   "product": "Structural Business Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Business Statistics"
+  },
+  {
+   "category_id": "123088",
+   "product": "Small and Medium Enterprises Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Business Statistics"
+  },
+  {
+   "category_id": "123265",
+   "product": "Research and Development Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Business Statistics"
+  },
+  {
+   "category_id": "2163811",
+   "product": "Non-Profit Organizations Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Business Statistics"
+  },
+  {
+   "category_id": "3631799",
+   "product": "Business Demography Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Business Statistics"
+  },
+  {
+   "category_id": "123342",
+   "product": "Short-Term Business Indicators Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Short-Term Business Statistics"
+  },
+  {
+   "category_id": "123427",
+   "product": "Wholesale and Retail Trade Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Short-Term Business Statistics"
+  },
+  {
+   "category_id": "123454",
+   "product": "Industrial Production Index",
+   "domain": "Economic Statistics",
+   "subdomain": "Short-Term Business Statistics"
+  },
+  {
+   "category_id": "1340144",
+   "product": "Business Confidence Index Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Short-Term Business Statistics"
+  },
+  {
+   "category_id": "123583",
+   "product": "Foreign Direct Investment Statistics",
+   "domain": "Economic Statistics",
+   "subdomain": "Investment Statistics"
+  },
+  {
+   "category_id": "123481",
+   "product": "International Trade for Goods",
+   "domain": "Economic Statistics",
+   "subdomain": "International Trade Statistics"
+  },
+  {
+   "category_id": "1340149",
+   "product": "International Trade Services",
+   "domain": "Economic Statistics",
+   "subdomain": "International Trade Statistics"
+  },
+  {
+   "category_id": "417515",
+   "product": "Labor Market Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Labor Market Statistics"
+  },
+  {
+   "category_id": "124074",
+   "product": "Registered Labor Market Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Labor Market Statistics"
+  },
+  {
+   "category_id": "123992",
+   "product": "Volunteer Work Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Labor Market Statistics"
+  },
+  {
+   "category_id": "123762",
+   "product": "Health and Safety at Work Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Health Statistics"
+  },
+  {
+   "category_id": "417594",
+   "product": "Health Status Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Health Statistics"
+  },
+  {
+   "category_id": "123812",
+   "product": "Health Care Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Health Statistics"
+  },
+  {
+   "category_id": "123842",
+   "product": "Health Determinants Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Health Statistics"
+  },
+  {
+   "category_id": "123902",
+   "product": "Women's Health, Care and Reproductive Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Health Statistics"
+  },
+  {
+   "category_id": "123872",
+   "product": "Early Childhood Development and Child Well-Being Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Health Statistics"
+  },
+  {
+   "category_id": "1278616",
+   "product": "Physical Activity Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Health Statistics"
+  },
+  {
+   "category_id": "2968800",
+   "product": "Healthcare Establishments and Workforce Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Health Statistics"
+  },
+  {
+   "category_id": "123644",
+   "product": "Women's Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Gender and Diversity Statistics"
+  },
+  {
+   "category_id": "123614",
+   "product": "Gender Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Gender and Diversity Statistics"
+  },
+  {
+   "category_id": "123728",
+   "product": "Disability Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Gender and Diversity Statistics"
+  },
+  {
+   "category_id": "123674",
+   "product": "Elderly Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Gender and Diversity Statistics"
+  },
+  {
+   "category_id": "2696599",
+   "product": "Youth Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Gender and Diversity Statistics"
+  },
+  {
+   "category_id": "3153652",
+   "product": "Saudi Family Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Gender and Diversity Statistics"
+  },
+  {
+   "category_id": "2366987",
+   "product": "Population Estimates Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Vitals and Demographics Statistics"
+  },
+  {
+   "category_id": "3175009",
+   "product": "Housing Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Vitals and Demographics Statistics"
+  },
+  {
+   "category_id": "127333",
+   "product": "Culture and Entertainment Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Life Styles Statistics"
+  },
+  {
+   "category_id": "2377692",
+   "product": "Safety Indicator",
+   "domain": "Social Statistics",
+   "subdomain": "Life Styles Statistics"
+  },
+  {
+   "category_id": "127329",
+   "product": "Household Income and Consumption Expenditure Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Living Conditions Statistics"
+  },
+  {
+   "category_id": "10132653",
+   "product": "Consumer Confidence Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Living Conditions Statistics"
+  },
+  {
+   "category_id": "123936",
+   "product": "Sports Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Sports Statistics"
+  },
+  {
+   "category_id": "514986",
+   "product": "Education and Training Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Education Statistics"
+  },
+  {
+   "category_id": "3030916",
+   "product": "Adult Skills and Learning Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Education Statistics"
+  },
+  {
+   "category_id": "417653",
+   "product": "Population Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Saudi Census Statistics 2022"
+  },
+  {
+   "category_id": "417700",
+   "product": "Household Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Saudi Census Statistics 2022"
+  },
+  {
+   "category_id": "417705",
+   "product": "Housing and Dwellings Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Saudi Census Statistics 2022"
+  },
+  {
+   "category_id": "494915",
+   "product": "Administrative Area Information",
+   "domain": "Social Statistics",
+   "subdomain": "Saudi Census Statistics 2022"
+  },
+  {
+   "category_id": "417709",
+   "product": "Health and Disability Statistics",
+   "domain": "Social Statistics",
+   "subdomain": "Saudi Census Statistics 2022"
+  },
+  {
+   "category_id": "124304",
+   "product": "Tourism Establishments Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Tourism ,Hajj and Umrah Statistics"
+  },
+  {
+   "category_id": "124334",
+   "product": "Umrah Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Tourism ,Hajj and Umrah Statistics"
+  },
+  {
+   "category_id": "124364",
+   "product": "Hajj Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Tourism ,Hajj and Umrah Statistics"
+  },
+  {
+   "category_id": "124954",
+   "product": "Air Transport Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Transportation and logistic services statistics"
+  },
+  {
+   "category_id": "124924",
+   "product": "Maritime Transport Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Transportation and logistic services statistics"
+  },
+  {
+   "category_id": "124894",
+   "product": "Road Transport Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Transportation and logistic services statistics"
+  },
+  {
+   "category_id": "565258",
+   "product": "Railway Transport Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Transportation and logistic services statistics"
+  },
+  {
+   "category_id": "2163948",
+   "product": "Warehousing and Logistics Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Transportation and logistic services statistics"
+  },
+  {
+   "category_id": "124428",
+   "product": "Household Environment Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Environment Statistics"
+  },
+  {
+   "category_id": "124458",
+   "product": "Environmental Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Environment Statistics"
+  },
+  {
+   "category_id": "2236741",
+   "product": "Climate Change Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Environment Statistics"
+  },
+  {
+   "category_id": "2236631",
+   "product": "Water Accounts",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Environment Statistics"
+  },
+  {
+   "category_id": "10269979",
+   "product": "Waste Accounts",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Environment Statistics"
+  },
+  {
+   "category_id": "124520",
+   "product": "Agriculture Census",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Agriculture Statistics"
+  },
+  {
+   "category_id": "124553",
+   "product": "Livestock Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Agriculture Statistics"
+  },
+  {
+   "category_id": "124643",
+   "product": "Fishing and Aquaculture Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Agriculture Statistics"
+  },
+  {
+   "category_id": "124583",
+   "product": "Agricultural Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Agriculture Statistics"
+  },
+  {
+   "category_id": "124673",
+   "product": "Agricultural Holdings Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Agriculture Statistics"
+  },
+  {
+   "category_id": "2197199",
+   "product": "Food Security Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Agriculture Statistics"
+  },
+  {
+   "category_id": "2236635",
+   "product": "Agriculture and Fisheries Accounts",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Agriculture Statistics"
+  },
+  {
+   "category_id": "124827",
+   "product": "Oil and Gas Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Energy Statistics"
+  },
+  {
+   "category_id": "124797",
+   "product": "Renewable Energy Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Energy Statistics"
+  },
+  {
+   "category_id": "124737",
+   "product": "Energy Efficiency Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Energy Statistics"
+  },
+  {
+   "category_id": "124767",
+   "product": "Electrical Energy Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Energy Statistics"
+  },
+  {
+   "category_id": "124707",
+   "product": "Household Energy Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Energy Statistics"
+  },
+  {
+   "category_id": "9766296",
+   "product": "Mineral Resources Statistics",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Energy Statistics"
+  },
+  {
+   "category_id": "124988",
+   "product": "Service Statistics Publication",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Spatial Statistics"
+  },
+  {
+   "category_id": "2215700",
+   "product": "Land Accounts",
+   "domain": "Environmental and Spatial Statistics",
+   "subdomain": "Spatial Statistics"
+  }
+ ],
+ "ar": [
+  {
+   "category_id": "120038",
+   "product": "إحصاءات الناتج المحلي الإجمالي",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الحسابات القومية"
+  },
+  {
+   "category_id": "419265",
+   "product": "جداول العرض والاستخدام والمدخلات والمخرجات",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الحسابات القومية"
+  },
+  {
+   "category_id": "2197212",
+   "product": "إحصاءات الاقتصادي الشامل",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الاقتصادي الشامل"
+  },
+  {
+   "category_id": "122941",
+   "product": "إحصاءات الاقتصاد الرقمي",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الاقتصاد الرقمي"
+  },
+  {
+   "category_id": "122971",
+   "product": "إحصاءات نفاذ وإستخدام تقنية المعلومات والإتصالات للأسر والأفراد",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الاقتصاد الرقمي"
+  },
+  {
+   "category_id": "127305",
+   "product": "إحصاءات نفاذ وإستخدام تقنية المعلومات والإتصالات للمنشآت",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الاقتصاد الرقمي"
+  },
+  {
+   "category_id": "121421",
+   "product": "إحصاءات أسعار المستهلك",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأسعار"
+  },
+  {
+   "category_id": "122852",
+   "product": "إحصاءات أسعار الجملة",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأسعار"
+  },
+  {
+   "category_id": "121920",
+   "product": "إحصاءات أسعار العقارات",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأسعار"
+  },
+  {
+   "category_id": "121662",
+   "product": "إحصاءات متوسطات الأسعار",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأسعار"
+  },
+  {
+   "category_id": "3453505",
+   "product": "إحصاءات الرقم القياسي لتكاليف البناء",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأسعار"
+  },
+  {
+   "category_id": "10329368",
+   "product": "إحصاءات الرقم القياسي لأسعار المنتجين",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأسعار"
+  },
+  {
+   "category_id": "123038",
+   "product": "إحصاءات الأعمال الهيكلية",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأعمال"
+  },
+  {
+   "category_id": "123088",
+   "product": "إحصاءات المنشآت الصغيرة والمتوسطة",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأعمال"
+  },
+  {
+   "category_id": "123265",
+   "product": "إحصاءات البحث والتطوير",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأعمال"
+  },
+  {
+   "category_id": "2163811",
+   "product": "إحصاءات منظمات القطاع غير الربحي",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأعمال"
+  },
+  {
+   "category_id": "3631799",
+   "product": "إحصاءات ديموغرافية الأعمال",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأعمال"
+  },
+  {
+   "category_id": "123342",
+   "product": "إحصاءات مؤشر الاعمال قصيرة المدى",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأعمال قصيرة المدى"
+  },
+  {
+   "category_id": "123427",
+   "product": "إحصاءات تجارة الجملة والتجزئة",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأعمال قصيرة المدى"
+  },
+  {
+   "category_id": "123454",
+   "product": "إحصاءات الرقم القياسي للإنتاج الصناعي",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأعمال قصيرة المدى"
+  },
+  {
+   "category_id": "1340144",
+   "product": "إحصاءات مؤشر ثقة الأعمال",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الأعمال قصيرة المدى"
+  },
+  {
+   "category_id": "123583",
+   "product": "إحصاءات الاستثمار الأجنبي المباشر",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات الاستثمار"
+  },
+  {
+   "category_id": "123481",
+   "product": "التجارة الدولية للسلع",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات التجارة الدولية"
+  },
+  {
+   "category_id": "1340149",
+   "product": "التجارة الدولية للخدمات",
+   "domain": "الإحصاءات الاقتصادية",
+   "subdomain": "إحصاءات التجارة الدولية"
+  },
+  {
+   "category_id": "417515",
+   "product": "إحصاءات سوق العمل",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات سوق العمل"
+  },
+  {
+   "category_id": "124074",
+   "product": "إحصاءات سوق العمل السجلية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات سوق العمل"
+  },
+  {
+   "category_id": "123992",
+   "product": "إحصاءات العمل التطوعي",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات سوق العمل"
+  },
+  {
+   "category_id": "123762",
+   "product": "إحصاءات الصحة والسلامة في العمل",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الصحة"
+  },
+  {
+   "category_id": "417594",
+   "product": "إحصاءات الحالة الصحية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الصحة"
+  },
+  {
+   "category_id": "123812",
+   "product": "إحصاءات الرعاية الصحية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الصحة"
+  },
+  {
+   "category_id": "123842",
+   "product": "إحصاءات المحددات الصحية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الصحة"
+  },
+  {
+   "category_id": "123902",
+   "product": "إحصاءات صحة المرأة والرعاية والإنجابية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الصحة"
+  },
+  {
+   "category_id": "123872",
+   "product": "إحصاءات تنمية الطفولة المبكرة ورفاهية الطفل",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الصحة"
+  },
+  {
+   "category_id": "1278616",
+   "product": "إحصاءات النشاط البدني",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الصحة"
+  },
+  {
+   "category_id": "2968800",
+   "product": "إحصاءات المنشآت والقوى العاملة الصحية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الصحة"
+  },
+  {
+   "category_id": "123644",
+   "product": "إحصاءات المرأة",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات النوع الاجتماعي والتنوع"
+  },
+  {
+   "category_id": "123614",
+   "product": "إحصاءات النوع الاجتماعي",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات النوع الاجتماعي والتنوع"
+  },
+  {
+   "category_id": "123728",
+   "product": "إحصاءات الإعاقة",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات النوع الاجتماعي والتنوع"
+  },
+  {
+   "category_id": "123674",
+   "product": "إحصاءات كبار السن",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات النوع الاجتماعي والتنوع"
+  },
+  {
+   "category_id": "2696599",
+   "product": "إحصاءات الشباب",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات النوع الاجتماعي والتنوع"
+  },
+  {
+   "category_id": "3153652",
+   "product": "إحصاءات الأسرة السعودية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات النوع الاجتماعي والتنوع"
+  },
+  {
+   "category_id": "2366987",
+   "product": "إحصاءات التقديرات السكانية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات حيوية و سكانية"
+  },
+  {
+   "category_id": "3175009",
+   "product": "إحصاءات المساكن",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات حيوية و سكانية"
+  },
+  {
+   "category_id": "127333",
+   "product": "إحصاءات الثقافة والترفية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات أساليب الحياة"
+  },
+  {
+   "category_id": "2377692",
+   "product": "مؤشر الأمان",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات أساليب الحياة"
+  },
+  {
+   "category_id": "127329",
+   "product": "إحصاءات الدخل والإنفاق الاستهلاكي للأسرة",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الأحوال المعيشية"
+  },
+  {
+   "category_id": "10132653",
+   "product": "إحصاءات مؤشر ثقة المستهلك",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الأحوال المعيشية"
+  },
+  {
+   "category_id": "123936",
+   "product": "إحصاءات الرياضة",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات الرياضة"
+  },
+  {
+   "category_id": "514986",
+   "product": "إحصاءات التعليم والتدريب",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات التعليم"
+  },
+  {
+   "category_id": "3030916",
+   "product": "إحصاءات المهارات والتعلم للبالغين",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات التعليم"
+  },
+  {
+   "category_id": "417653",
+   "product": "إحصاءات السكان",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات تعداد السعودية ٢٠٢٢"
+  },
+  {
+   "category_id": "417700",
+   "product": "إحصاءات الأسر المعيشية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات تعداد السعودية ٢٠٢٢"
+  },
+  {
+   "category_id": "417705",
+   "product": "إحصاءات السكن و المساكن",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات تعداد السعودية ٢٠٢٢"
+  },
+  {
+   "category_id": "494915",
+   "product": "عرض معلومات المناطق الإدارية",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات تعداد السعودية ٢٠٢٢"
+  },
+  {
+   "category_id": "417709",
+   "product": "إحصاءات الصحة و الإعاقة",
+   "domain": "الإحصاءات الاجتماعية",
+   "subdomain": "إحصاءات تعداد السعودية ٢٠٢٢"
+  },
+  {
+   "category_id": "124304",
+   "product": "إحصاءات المنشآت السياحية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات السياحة والحج والعمرة"
+  },
+  {
+   "category_id": "124334",
+   "product": "إحصاءات العمرة",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات السياحة والحج والعمرة"
+  },
+  {
+   "category_id": "124364",
+   "product": "إحصاءات الحج",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات السياحة والحج والعمرة"
+  },
+  {
+   "category_id": "124954",
+   "product": "إحصاءات النقل الجوي",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات النقل والخدمات اللوجستية"
+  },
+  {
+   "category_id": "124924",
+   "product": "إحصاءات النقل البحري",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات النقل والخدمات اللوجستية"
+  },
+  {
+   "category_id": "124894",
+   "product": "إحصاءات النقل على الطرق",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات النقل والخدمات اللوجستية"
+  },
+  {
+   "category_id": "565258",
+   "product": "إحصاءات النقل على السكك الحديدية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات النقل والخدمات اللوجستية"
+  },
+  {
+   "category_id": "2163948",
+   "product": "إحصاءات التخزين والخدمات اللوجستية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات النقل والخدمات اللوجستية"
+  },
+  {
+   "category_id": "124428",
+   "product": "إحصاءات البيئة المنزلية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات البيئة"
+  },
+  {
+   "category_id": "124458",
+   "product": "الإحصاءات البيئية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات البيئة"
+  },
+  {
+   "category_id": "2236741",
+   "product": "إحصاءات التغير المناخي",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات البيئة"
+  },
+  {
+   "category_id": "2236631",
+   "product": "حسابات المياه",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات البيئة"
+  },
+  {
+   "category_id": "10269979",
+   "product": "حسابات النفايات",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات البيئة"
+  },
+  {
+   "category_id": "124520",
+   "product": "التعداد الزراعي",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الزراعة"
+  },
+  {
+   "category_id": "124553",
+   "product": "إحصاءات الثروة الحيوانية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الزراعة"
+  },
+  {
+   "category_id": "124643",
+   "product": "إحصاءات الصيد البحري وتربية المائيات",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الزراعة"
+  },
+  {
+   "category_id": "124583",
+   "product": "الإحصاءات الزراعية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الزراعة"
+  },
+  {
+   "category_id": "124673",
+   "product": "إحصاءات الحيازات الزراعية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الزراعة"
+  },
+  {
+   "category_id": "2197199",
+   "product": "إحصاءات الأمن الغذائي",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الزراعة"
+  },
+  {
+   "category_id": "2236635",
+   "product": "حسابات الزراعة ومصائد الاسماك",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الزراعة"
+  },
+  {
+   "category_id": "124827",
+   "product": "إحصاءات البترول والغاز",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الطاقة"
+  },
+  {
+   "category_id": "124797",
+   "product": "إحصاءات الطاقة المتجددة",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الطاقة"
+  },
+  {
+   "category_id": "124737",
+   "product": "إحصاءات كفاءة الطاقة",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الطاقة"
+  },
+  {
+   "category_id": "124767",
+   "product": "إحصاءات الطاقة الكهربائية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الطاقة"
+  },
+  {
+   "category_id": "124707",
+   "product": "إحصاءات الطاقة المنزلية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الطاقة"
+  },
+  {
+   "category_id": "9766296",
+   "product": "إحصاءات الثروة المعدنية",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات الطاقة"
+  },
+  {
+   "category_id": "124988",
+   "product": "إحصاءات الخدمات",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات مكانية"
+  },
+  {
+   "category_id": "2215700",
+   "product": "حسابات الأراضي",
+   "domain": "الإحصاءات البيئية والمكانية",
+   "subdomain": "إحصاءات مكانية"
+  }
+ ]
+}

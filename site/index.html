@@ -1,0 +1,914 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Saudi 360</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Palette read off the reference site: warm near-black ground, teal accent,
+     slate panels, white headings over grey body text. */
+  :root{
+    --bg:#1e1c1c; --panel:#1f2832; --panel2:#023444; --rail:#171616;
+    --acc:#009dad; --acc2:#00c3d6; --accdim:#114c63;
+    --ink:#ffffff; --ink2:#c1c2c5; --ink3:#8c8f94; --ink4:#5f6367;
+    --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.18);
+    --warn:#f0a63c; --warnbg:#3a2a0d; --down:#ff6b5a; --up:#2ec4a6;
+    --sans:"Barlow","IBM Plex Sans Arabic",system-ui,sans-serif;
+    --cond:"Barlow Semi Condensed","IBM Plex Sans Arabic",system-ui,sans-serif;
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f5f6; --panel:#ffffff; --panel2:#e6f4f6; --rail:#eceef0;
+    --acc:#00808f; --acc2:#00808f; --accdim:#cfe9ee;
+    --ink:#10161c; --ink2:#42474d; --ink3:#71767c; --ink4:#9aa0a6;
+    --line:rgba(0,0,0,.10); --line2:rgba(0,0,0,.18);
+    --warn:#8a5a10; --warnbg:#fdf1dc; --down:#c0392b; --up:#0b7a63;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink2);font:400 15px/1.6 var(--sans);
+    -webkit-font-smoothing:antialiased}
+  [dir="rtl"] body{font-family:"IBM Plex Sans Arabic",var(--sans)}
+  a{color:var(--acc2);text-decoration:none} a:hover{text-decoration:underline}
+  h1,h2,h3,h4{color:var(--ink);font-family:var(--cond);font-weight:700;margin:0}
+  .wrap{max-width:1180px;margin:0 auto;padding-inline:22px;padding-block:0 70px}
+
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--rail);
+    border-bottom:1px solid var(--line)}
+  .nav{max-width:1180px;margin:0 auto;padding:11px 22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .brand{font-family:var(--cond);font-weight:700;font-size:19px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink);white-space:nowrap}
+  .brand span{color:var(--acc2)}
+  .nav a.tab{font-family:var(--cond);font-size:14px;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--ink2);padding:6px 0}
+  .nav a.tab.on{color:var(--acc2)}
+  .nav a.tab:hover{color:var(--ink);text-decoration:none}
+  .spacer{flex:1}
+  button,select,input{font:inherit;color:var(--ink);background:transparent;
+    border:1px solid var(--line2);border-radius:4px;padding:6px 12px}
+  button{cursor:pointer;font-size:13px;font-family:var(--cond);letter-spacing:.05em;
+    text-transform:uppercase}
+  button:hover{border-color:var(--acc)}
+  button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  select{background:var(--panel)} option{background:var(--panel);color:var(--ink)}
+  input[type=search]{min-width:190px;border-radius:32px;padding:6px 16px;background:var(--panel)}
+
+  .hero{background:linear-gradient(180deg,var(--panel2) 0%,var(--bg) 100%);
+    border-bottom:1px solid var(--line);margin-bottom:34px}
+  .hero .in{max-width:1180px;margin:0 auto;padding:58px 22px 44px;text-align:center}
+  .hero h1{font-size:clamp(30px,5.2vw,54px);line-height:1.04;letter-spacing:.01em;
+    text-transform:uppercase;margin:0 0 16px}
+  .hero h1 em{font-style:normal;color:var(--acc2)}
+  .hero p{font-size:16px;color:var(--ink2);max-width:62ch;margin:0 auto}
+
+  .sec{margin:42px 0 16px;display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+  .sec .mk{width:15px;height:15px;border-radius:3px;background:var(--acc);flex:none;
+    box-shadow:0 0 0 4px rgba(0,157,173,.16)}
+  .sec h2{font-size:21px;letter-spacing:.09em;text-transform:uppercase;color:var(--acc2)}
+  .sec h2 a{color:inherit}
+  .sec .c{font-family:var(--sans);font-size:12.5px;letter-spacing:.02em;text-transform:none;
+    color:var(--ink3);font-weight:400;margin-inline-start:auto}
+  .sub2{font-size:16px;color:var(--ink);margin:0 0 14px;font-family:var(--cond);
+    letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+  .lede{color:var(--ink2);max-width:72ch;margin:0 0 22px}
+  .crumb{font-size:12.5px;color:var(--ink3);margin-top:22px;letter-spacing:.04em;
+    text-transform:uppercase;font-family:var(--cond)}
+  h1.page{font-size:clamp(26px,4vw,38px);text-transform:uppercase;letter-spacing:.02em;margin:8px 0 8px}
+
+  .grid{display:grid;gap:14px}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(262px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px}
+  .card.pad0{padding:0;overflow:hidden}
+  a.card{display:block;color:inherit;position:relative;min-height:104px}
+  a.card:hover{border-color:var(--acc);text-decoration:none}
+  a.card .tag{position:absolute;top:10px;inset-inline-end:12px;font-family:var(--cond);
+    font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc2);
+    background:rgba(0,157,173,.12);border:0;padding:3px 8px;border-radius:3px}
+  a.card h3{font-size:17px;letter-spacing:.02em;margin:0 0 6px;padding-inline-end:76px}
+  .tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;font-family:var(--cond);
+    letter-spacing:.08em;text-transform:uppercase;background:var(--rail);color:var(--ink2);
+    border:1px solid var(--line)}
+  .tag.acc{background:rgba(0,157,173,.14);color:var(--acc2);border-color:transparent}
+
+  .kpis2{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0}
+  .kpi2{background:var(--panel);padding:18px 20px}
+  .kpi2 .n{font-family:var(--cond);font-size:38px;font-weight:700;line-height:1;color:var(--ink);
+    font-variant-numeric:tabular-nums;display:block}
+  .kpi2 .n.dn{color:var(--down)} .kpi2 .n.up{color:var(--up)}
+  .kpi2 .t{font-family:var(--cond);font-size:13px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink);margin-top:9px}
+  .kpi2 .s{font-size:12px;color:var(--ink3);margin-top:4px;line-height:1.45}
+  .kpi2 .p{font-family:var(--cond);font-size:11px;color:var(--acc2);margin-top:6px;
+    letter-spacing:.11em;text-transform:uppercase}
+  .kpi .lab{font-family:var(--cond);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink3);margin-bottom:6px}
+  .kpi .val{font-family:var(--cond);font-size:30px;font-weight:700;color:var(--ink);
+    font-variant-numeric:tabular-nums;line-height:1}
+  .kpi .sub{font-size:12px;color:var(--ink3);margin-top:4px}
+
+  .split{display:grid;gap:8px;margin:0 0 14px}
+  .srow{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px}
+  .srow button{border-radius:4px;background:var(--rail);border:1px solid var(--line);
+    padding:9px 12px;font-size:12.5px;letter-spacing:.08em;color:var(--ink2)}
+  .srow button.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+
+  .subg{border-top:1px solid var(--line);padding:16px 0}
+  .subg h3{font-family:var(--cond);font-size:12.5px;text-transform:uppercase;letter-spacing:.11em;
+    color:var(--ink3);font-weight:600;margin:0 0 10px}
+  .plist{display:flex;flex-wrap:wrap;gap:7px}
+  .plink{display:inline-flex;align-items:baseline;gap:8px;font-size:13.5px;padding:7px 13px;
+    border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+  .plink:hover{border-color:var(--acc);color:var(--acc2);text-decoration:none}
+  .plink .n{font-family:var(--cond);font-size:11px;color:var(--acc2);font-variant-numeric:tabular-nums}
+  .plink.empty{color:var(--ink3);border-style:dashed}
+
+  .warnbox{background:var(--warnbg);border:1px solid var(--warn);border-radius:6px;
+    padding:13px 16px;font-size:14px;margin:0 0 18px;color:var(--ink2)}
+  .warnbox b{color:var(--warn)}
+  .chart{width:100%;height:352px}
+  .chart.sm{height:248px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:start;padding:9px 12px;border-bottom:1px solid var(--line)}
+  th{font-family:var(--cond);font-size:11px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--ink3);font-weight:600}
+  td{color:var(--ink2)}
+  td.n,th.n{text-align:end;font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:rgba(255,255,255,.03)}
+  .scroll{overflow-x:auto}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-size:12.5px;padding:6px 12px;border-radius:4px;border:1px solid var(--line);
+    background:var(--rail);color:var(--ink2);cursor:pointer;text-align:start}
+  .chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  .picker{max-height:236px;overflow:auto;border:1px solid var(--line);border-radius:6px;
+    padding:9px;background:var(--rail)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .muted{color:var(--ink3);font-size:12.5px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--ink4)}
+  .note{font-size:12.5px;color:var(--ink3);margin:10px 0 0}
+  .prose{font-size:15px;color:var(--ink2);max-width:76ch;line-height:1.75}
+  .prose b{color:var(--ink);font-weight:600}
+  footer{border-top:1px solid var(--line);margin-top:46px;padding-top:20px;font-size:12.5px;color:var(--ink4)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  [hidden]{display:none!important}
+  @media(max-width:520px){.chart{height:290px}.hero .in{padding:40px 22px 32px}}
+</style>
+
+<header>
+  <nav class="nav">
+    <div class="brand">Saudi <span>360</span></div>
+    <a class="tab" href="#/" data-nav="/" data-t="nav_home"></a>
+    <a class="tab" href="#/catalogue" data-nav="/catalogue" data-t="nav_cat"></a>
+    <a class="tab" href="#/map" data-nav="/map" data-t="nav_map"></a>
+    <a class="tab" href="#/lens" data-nav="/lens" data-t="nav_lens"></a>
+    <a class="tab" href="#/explore" data-nav="/explore" data-t="nav_exp"></a>
+    <a class="tab" href="#/data" data-nav="/data" data-t="nav_data"></a>
+    <div class="spacer"></div>
+    <input type="search" id="q" data-t-ph="search" aria-label="Search">
+    <button id="lang">العربية</button>
+    <button id="theme" data-t="dark"></button>
+  </nav>
+</header>
+
+<div class="wrap" id="view"></div>
+
+<footer class="wrap">
+  <p data-t="attr"></p>
+  <p data-t="attr2"></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<script>
+const T={
+ en:{dir:"ltr",nav_home:"Overview",nav_cat:"Catalogue",nav_exp:"Compare",nav_map:"Map",nav_lens:"Vision 2030",nav_data:"Query",dark:"Dark",light:"Light",
+  h_map:"Regional map",
+  p_map:"312 measures that cover at least 8 of the 13 administrative regions. GASTAT reports some products by city and others by region; cities are rolled up to the region that contains them.",
+  m_prod:"Product",m_metric:"Measure",m_period:"Period",m_rank:"Regions ranked",
+  m_cov:"of all observations carry a place this map can resolve",
+  h_lens:"Vision 2030 lens",
+  p_lens:"The same statistics grouped by national goal rather than by producing department.",
+  lens_note:"This grouping of GASTAT products under Vision 2030's three themes is ours, made for navigation. These are not Vision 2030's official KPIs, and no official target values appear anywhere in this project.",
+  lens_gap:"Thinly covered — GASTAT publishes little that speaks to this theme in the scope crawled so far.",
+  th_reg:"Region",nodata:"not reported",
+  h_sql:"Query the full corpus",
+  p_sql:"The pages above show a curated few hundred series because a page cannot carry 916,437. This runs SQL against all of them — the database is read straight from storage by your browser, so nothing is sent to a server and no query is logged.",
+  sql_run:"Run",sql_running:"Running…",sql_loading:"Loading the database engine…",
+  sql_ready:"Ready — {n} observations across {p} products.",
+  sql_unavail:"The query engine could not start in this view. It needs the deployed site; the published data files are listed in the manifest.",
+  sql_rows:"{n} rows in {ms} ms",sql_err:"Query failed",
+  sql_ex:"Examples",sql_limit:"Showing the first 500 rows.",
+  p_cat:"Every product GASTAT publishes, in the groups it publishes them under. A number beside a product is how many series it contributes to the charts; products without one are catalogued but not charted.",
+  h_all:"All products",
+  search:"Search products and series…",
+  title:"A 360° view of Saudi official statistics",
+  hero1:"Saudi Arabia,",hero2:"measured.",h_overview:"Overview",
+  t_subs:"sub-domains",more:"All sub-domains",tag_prod:"Product",tag_dom:"Domain",
+  kpi_note:"These five figures are pinned to one exact series each and checked against the number GASTAT states in prose in its own release.",
+  lede:"Every figure is parsed from the General Authority for Statistics' own published workbooks and links back to the file it came from. Nothing is estimated, interpolated or filled in.",
+  k_obs:"Observations",k_ser:"Series",k_prod:"Products",k_rel:"Releases",k_rev:"Superseded readings",
+  h_dom:"Domains",h_prod:"Products",h_recent:"Most recent releases",
+  h_head:"Headline series",h_break:"Latest breakdown",h_series:"All series",h_rel:"Source releases",
+  h_cov:"Coverage",
+  p_break:"Largest values in the most recent period.",
+  p_series:"Pick up to 6 to plot together.",
+  p_exp:"Compare any series across products. Values are re-based to 100 at each series' first common point, so different units can share one axis.",
+  th_prod:"Product",th_dom:"Domain",th_ser:"Series",th_obs:"Observations",th_span:"Coverage",
+  th_rel:"Releases",th_item:"Item",th_val:"Value",th_w:"Weight %",th_per:"Period",th_file:"Source file",
+  th_title:"Release",
+  none:"No time series in this product — GASTAT publishes it as a single-period table, so it is shown as a breakdown instead.",
+  rebase:"This product's index was rebased during the period shown. Series on different bases are kept separate and never joined.",
+  idx100:"Re-base to 100",raw:"Raw values",csv:"Download CSV",csv_fail:"Save unavailable",
+  measure:"Measure",kind_:{all:"All",index:"Index",change:"Change",value:"Value"},
+  exp_more:"Showing the first 400 series — use the search box to narrow them.",
+  pick:"Select series",clear:"Clear",
+  attr:"Source: General Authority for Statistics (GASTAT), Kingdom of Saudi Arabia. Reproduced under clause 1.2.2 of GASTAT's Use Policy, which permits reuse provided GASTAT is credited and modifications are indicated.",
+  attr2:"Not an official GASTAT publication and not endorsed by GASTAT. Index values are as published; any re-basing or growth rate shown here is derived and computed only within a single index base."},
+ ar:{dir:"rtl",nav_home:"نظرة عامة",nav_cat:"الدليل",nav_exp:"المقارنة",nav_map:"الخريطة",nav_lens:"رؤية 2030",nav_data:"استعلام",dark:"داكن",light:"فاتح",
+  h_map:"الخريطة الإقليمية",
+  p_map:"٣١٢ مقياسًا تغطي ٨ مناطق إدارية على الأقل من أصل ١٣. تنشر الهيئة بعض المنتجات حسب المدينة وأخرى حسب المنطقة؛ وتُجمَّع المدن ضمن المنطقة التي تقع فيها.",
+  m_prod:"المنتج",m_metric:"المقياس",m_period:"الفترة",m_rank:"ترتيب المناطق",
+  m_cov:"من إجمالي المشاهدات تحمل مكانًا يمكن للخريطة تحديده",
+  h_lens:"منظور رؤية 2030",
+  p_lens:"الإحصاءات نفسها مُجمَّعة حسب الهدف الوطني بدلًا من الجهة المنتجة.",
+  lens_note:"هذا التجميع لمنتجات الهيئة ضمن محاور رؤية 2030 الثلاثة من عملنا، وُضع لتسهيل التصفح. وهي ليست مؤشرات الأداء الرسمية للرؤية، ولا ترد أي مستهدفات رسمية في هذا المشروع.",
+  lens_gap:"تغطية محدودة — تنشر الهيئة القليل مما يتصل بهذا المحور ضمن النطاق الذي تم جمعه.",
+  th_reg:"المنطقة",nodata:"غير متاح",
+  h_sql:"استعلام كامل البيانات",
+  p_sql:"تعرض الصفحات السابقة بضع مئات من السلاسل لأن الصفحة لا تتسع لـ٩١٦٬٤٣٧. هنا تُنفَّذ استعلامات SQL على جميعها — يقرأ متصفحك قاعدة البيانات مباشرة، فلا شيء يُرسل إلى خادم ولا يُسجَّل أي استعلام.",
+  sql_run:"تنفيذ",sql_running:"جارٍ التنفيذ…",sql_loading:"جارٍ تحميل محرك قاعدة البيانات…",
+  sql_ready:"جاهز — {n} مشاهدة عبر {p} منتجًا.",
+  sql_unavail:"تعذّر تشغيل محرك الاستعلام في هذا العرض. يحتاج إلى الموقع المنشور.",
+  sql_rows:"{n} صفًا في {ms} مللي ثانية",sql_err:"فشل الاستعلام",
+  sql_ex:"أمثلة",sql_limit:"تُعرض أول ٥٠٠ صف.",
+  p_cat:"جميع منتجات الهيئة ضمن المجموعات التي تنشرها بها. الرقم بجانب المنتج هو عدد السلاسل التي يسهم بها في الرسوم؛ والمنتجات بلا رقم مفهرسة لكن غير مرسومة.",
+  h_all:"جميع المنتجات",
+  search:"ابحث في المنتجات والسلاسل…",
+  title:"رؤية شاملة للإحصاءات الرسمية السعودية",
+  hero1:"المملكة العربية السعودية،",hero2:"بالأرقام.",h_overview:"نظرة عامة",
+  t_subs:"مجالات فرعية",more:"كل المجالات الفرعية",tag_prod:"منتج",tag_dom:"مجال",
+  kpi_note:"هذه المؤشرات الخمسة مرتبطة بسلسلة واحدة محددة لكل منها، وتم التحقق منها مقابل الرقم الذي تذكره الهيئة نصًا في إصدارها.",
+  lede:"كل رقم مستخرج من ملفات الهيئة العامة للإحصاء المنشورة، ويرتبط بالملف المصدر. لا توجد تقديرات أو استيفاء أو تعبئة للفجوات.",
+  k_obs:"المشاهدات",k_ser:"السلاسل",k_prod:"المنتجات",k_rel:"الإصدارات",k_rev:"قراءات محدَّثة",
+  h_dom:"المجالات",h_prod:"المنتجات",h_recent:"أحدث الإصدارات",
+  h_head:"السلسلة الرئيسية",h_break:"أحدث توزيع",h_series:"كل السلاسل",h_rel:"الإصدارات المصدرية",
+  h_cov:"التغطية",
+  p_break:"أكبر القيم في أحدث فترة.",
+  p_series:"اختر حتى ٦ سلاسل لعرضها معًا.",
+  p_exp:"قارن أي سلاسل عبر المنتجات. تُعاد القيم إلى أساس ١٠٠ عند أول نقطة مشتركة، ليتمكن عرضها على محور واحد.",
+  th_prod:"المنتج",th_dom:"المجال",th_ser:"السلاسل",th_obs:"المشاهدات",th_span:"التغطية",
+  th_rel:"الإصدارات",th_item:"البند",th_val:"القيمة",th_w:"الوزن %",th_per:"الفترة",th_file:"الملف المصدر",
+  th_title:"الإصدار",
+  none:"لا توجد سلاسل زمنية لهذا المنتج — تنشره الهيئة كجدول لفترة واحدة، لذا يُعرض كتوزيع.",
+  rebase:"أُعيد تحديد سنة الأساس لهذا المؤشر خلال الفترة المعروضة. تُفصل السلاسل ذات الأساس المختلف ولا تُوصل.",
+  idx100:"إعادة الأساس إلى ١٠٠",raw:"القيم الأصلية",csv:"تنزيل CSV",csv_fail:"التنزيل غير متاح",
+  measure:"المقياس",kind_:{all:"الكل",index:"رقم قياسي",change:"تغير",value:"قيمة"},
+  exp_more:"تُعرض أول ٤٠٠ سلسلة — استخدم البحث لتضييق النتائج.",
+  pick:"اختر السلاسل",clear:"مسح",
+  attr:"المصدر: الهيئة العامة للإحصاء، المملكة العربية السعودية. مستنسخ وفق البند 1.2.2 من سياسة الاستخدام التي تتيح إعادة الاستخدام بشرط نسب المصدر وبيان التعديلات.",
+  attr2:"ليس إصدارًا رسميًا للهيئة وغير معتمد منها. الأرقام القياسية كما نُشرت؛ أي إعادة أساس أو معدل نمو معروض هنا مشتق ويُحتسب داخل سنة أساس واحدة."}};
+
+const DOM_AR={"Economic Statistics":"الإحصاءات الاقتصادية","Social Statistics":"الإحصاءات الاجتماعية",
+ "Environmental and Spatial Statistics":"الإحصاءات البيئية والمكانية","Archived Data":"البيانات المؤرشفة"};
+const PAL=["--c1","--c2","--c3","--c4","--c5","--c6","--c7","--c8"];
+
+let L="en", D=null, charts=[], picked=[], expPicked=[], query="", kindFilter="all";
+// Series of different kinds do not share a y-axis: an index sits near 100 while
+// a percentage change sits near zero, so drawing them together flattens both.
+function kindsFor(p){
+  const ks=[...new Set(p.series.map(s=>s.kind))].filter(Boolean);
+  return ["all", ...["index","change","value"].filter(k=>ks.includes(k))];
+}
+function seriesFor(p){
+  return kindFilter==="all"?p.series:p.series.filter(s=>s.kind===kindFilter);
+}
+let G=null, geoJson=null, mapSel={prod:null,metric:null,period:null};
+async function loadGeo(){
+  if(G&&geoJson)return true;
+  try{
+    if(!G) G=await fetch("geo.json",{cache:"no-cache"}).then(r=>r.json());
+    if(!geoJson){ geoJson=await fetch("geo/sau.geo.json",{cache:"no-cache"}).then(r=>r.json());
+      echarts.registerMap("sau",geoJson); }
+    return true;
+  }catch(e){ return false; }
+}
+const $=s=>document.querySelector(s);
+const t=()=>T[L];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=(n,d=0)=>n==null?"—":Number(n).toLocaleString(L==="ar"?"ar-SA-u-nu-latn":"en-US",
+  {minimumFractionDigits:d,maximumFractionDigits:d});
+const cvar=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function pkey(p){const m=/^(\d{4})(?:-(Q)?(\d{1,2}))?$/.exec(p||"");
+  if(!m)return 0; const y=+m[1]; if(!m[3])return y*100;
+  return y*100+(m[2]?+m[3]*3:+m[3]);}
+function plabel(p){const m=/^(\d{4})(?:-(Q)?(\d{1,2}))?$/.exec(p||"");
+  if(!m)return p; if(!m[3])return m[1];
+  if(m[2])return (L==="ar"?"ر":"Q")+m[3]+" "+m[1];
+  const MM={en:["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+            ar:["","يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"]};
+  return MM[L][+m[3]]+" "+m[1];}
+const sname=s=>{const a=L==="ar"?(s.row_ar||s.row):(s.row||s.row_ar),
+                b=L==="ar"?(s.col_ar||s.col):(s.col||s.col_ar);
+  return [a,b].filter(Boolean).join(" · ")||"—";};
+// Arabic names exist for 16 of 20 products; the four archived series are not in
+// GASTAT's live Arabic taxonomy, so they keep their English name rather than a
+// machine translation of an official statistical title.
+const pname=p=>(L==="ar"&&p.name_ar)?p.name_ar:p.name;
+const subname=p=>(L==="ar"&&p.subdomain_ar)?p.subdomain_ar:p.subdomain;
+const dname=d=>L==="ar"?(DOM_AR[d]||d):d;
+const bname=b=>(L==="ar"&&b.row_ar)?b.row_ar:b.row;
+
+function disposeCharts(){charts.forEach(c=>{try{c.dispose()}catch(e){}});charts=[];}
+function mkChart(el,opt){
+  const c=echarts.init(el,null,{renderer:"svg"});
+  c.setOption(opt); charts.push(c); return c;}
+function axis(){
+  return {ink:cvar("--ink2"),muted:cvar("--ink3"),line:cvar("--line"),card:cvar("--card")};
+}
+function lineOpt(series,labels,{legend=true,area=false}={}){
+  const a=axis();
+  return {backgroundColor:"transparent",animation:false,
+    grid:{left:6,right:14,top:legend?34:14,bottom:6,containLabel:true},
+    tooltip:{trigger:"axis",backgroundColor:a.card,borderColor:a.line,
+      textStyle:{color:cvar("--ink"),fontSize:12},
+      valueFormatter:v=>v==null?"—":num(v,2)},
+    legend:legend?{top:0,type:"scroll",textStyle:{color:a.ink,fontSize:11.5},
+      itemWidth:14,itemHeight:8,pageIconColor:a.ink}:{show:false},
+    xAxis:{type:"category",data:labels,boundaryGap:false,
+      axisLine:{lineStyle:{color:a.line}},axisTick:{show:false},
+      axisLabel:{color:a.muted,fontSize:11,hideOverlap:true}},
+    yAxis:{type:"value",scale:true,splitLine:{lineStyle:{color:a.line}},
+      axisLabel:{color:a.muted,fontSize:11,formatter:v=>num(v,0)}},
+    series:series.map((s,i)=>({name:s.name,type:"line",symbol:"none",smooth:false,
+      connectNulls:false,lineStyle:{width:2},color:cvar(PAL[i%PAL.length]),
+      areaStyle:area?{opacity:.10}:undefined,data:s.data}))};
+}
+function barOpt(rows){
+  const a=axis();
+  return {backgroundColor:"transparent",animation:false,
+    grid:{left:6,right:22,top:8,bottom:6,containLabel:true},
+    tooltip:{trigger:"item",backgroundColor:a.card,borderColor:a.line,
+      textStyle:{color:cvar("--ink"),fontSize:12},
+      formatter:p=>`${esc(p.name)}<br><b>${num(p.value,2)}</b>`},
+    xAxis:{type:"value",splitLine:{lineStyle:{color:a.line}},
+      axisLabel:{color:a.muted,fontSize:11,formatter:v=>num(v,0)}},
+    yAxis:{type:"category",inverse:true,data:rows.map(r=>r.label),
+      axisLine:{show:false},axisTick:{show:false},
+      axisLabel:{color:a.muted,fontSize:11,width:170,overflow:"truncate"}},
+    series:[{type:"bar",barMaxWidth:18,itemStyle:{borderRadius:[0,4,4,0],color:cvar("--c1")},
+      data:rows.map(r=>r.value)}]};
+}
+
+function alignSeries(list,rebase){
+  const keys=[...new Set(list.flatMap(s=>s.pts.map(p=>p[0])))].sort((a,b)=>pkey(a)-pkey(b));
+  const out=list.map(s=>{
+    const m=new Map(s.pts);
+    let base=null;
+    if(rebase){for(const k of keys){if(m.has(k)&&m.get(k)){base=m.get(k);break;}}}
+    return {name:sname(s),data:keys.map(k=>{
+      if(!m.has(k))return null;
+      const v=m.get(k);
+      return rebase&&base?+(v/base*100).toFixed(2):v;})};
+  });
+  return {keys,out};
+}
+
+/* ---------- views ---------- */
+
+function narrative(hs){
+  if(!hs||!hs.length)return "";
+  const by={}; hs.forEach(h=>by[h.id]=h);
+  const T_=t(), bits=[];
+  const say=(h)=>`<b>${esc(fmtKpi(h))}</b>`;
+  if(by.inflation)bits.push(L==="ar"
+    ? `بلغ التضخم المقيس بالرقم القياسي لأسعار المستهلك ${say(by.inflation)} في ${esc(plabel(by.inflation.period))} مقارنة بالشهر نفسه من العام السابق.`
+    : `Inflation, measured by the consumer price index, ran at ${say(by.inflation)} in ${esc(plabel(by.inflation.period))} against the same month a year earlier.`);
+  if(by.unemp_all&&by.unemp_saudi)bits.push(L==="ar"
+    ? `وبلغ معدل البطالة لجميع السكان ${say(by.unemp_all)} في ${esc(plabel(by.unemp_all.period))}، بينما بلغ بين السعوديين ${say(by.unemp_saudi)}.`
+    : `Unemployment across all residents stood at ${say(by.unemp_all)} in ${esc(plabel(by.unemp_all.period))}, while among Saudi nationals it was ${say(by.unemp_saudi)}.`);
+  if(by.ipi)bits.push(L==="ar"
+    ? `وسجّل الرقم القياسي للإنتاج الصناعي ${say(by.ipi)} في ${esc(plabel(by.ipi.period))} على أساس سنوي.`
+    : `The industrial production index moved ${say(by.ipi)} year on year in ${esc(plabel(by.ipi.period))}.`);
+  return `<p class="prose" style="margin-top:20px">${bits.join(" ")}</p>`;
+}
+
+function fmtKpi(h){
+  const v=h.value, sign=(h.id==="inflation"||h.id==="ipi")&&v>0?"+":"";
+  return sign+num(v,1)+h.unit;
+}
+function groupTree(list){
+  // GASTAT's own shape: domain -> sub-domain -> product. Rebuilding it here
+  // keeps the site navigable the way the source organisation publishes.
+  const t=new Map();
+  for(const p of list){
+    if(!t.has(p.domain))t.set(p.domain,new Map());
+    const subs=t.get(p.domain), key=p.subdomain||"—";
+    if(!subs.has(key))subs.set(key,[]);
+    subs.get(key).push(p);
+  }
+  return t;
+}
+function subName(p){return (L==="ar"&&p.subdomain_ar)?p.subdomain_ar:(p.subdomain||"—");}
+function productPill(p){
+  const n=p.series.length;
+  return `<a class="plink ${n?"":"empty"}" href="#/product/${esc(p.id)}">${esc(pname(p))}`+
+         (n?`<span class="n">${num(n)}</span>`:"")+`</a>`;
+}
+function vHome(){
+  const T_=t(), tot=D.totals;
+  const tree=groupTree(D.products);
+  const hs=(D.headlines||[]);
+  const recent=D.products.flatMap(p=>p.recent.slice(0,1).map(r=>({...r,p})))
+    .sort((a,b)=>pkey(b.period)-pkey(a.period)).slice(0,6);
+  return `
+  <section class="hero"><div class="in">
+    <h1>${esc(T_.hero1)} <em>${esc(T_.hero2)}</em></h1>
+    <p>${esc(T_.lede)}</p>
+  </div></section>
+  <section>
+    <div class="sec"><span class="mk"></span><h2>${esc(T_.h_overview)}</h2>
+      <span class="c">${esc(T_.kpi_note)}</span></div>
+    <div class="kpis2">
+      ${hs.map(h=>`<div class="kpi2">
+        <span class="n ${h.value<0?"dn":"up"}">${esc(fmtKpi(h))}</span>
+        <div class="t">${esc(L==="ar"?h.ar:h.en)}</div>
+        <div class="s">${esc(L==="ar"?h.note_ar:h.note_en)}</div>
+        <div class="p">${esc(plabel(h.period))}</div>
+      </div>`).join("")}
+    </div>
+    ${narrative(hs)}
+  </section>
+
+  <div class="grid g4" style="margin-bottom:8px">
+    ${[["k_obs",num(tot.observations)],["k_ser",num(tot.series)],["k_prod",num(tot.products)],
+       ["k_rel",num(tot.releases)]]
+      .map(([k,v])=>`<div class="card kpi"><div class="lab">${esc(T_[k])}</div><div class="val">${v}</div></div>`).join("")}
+  </div>
+
+  ${[...tree.entries()].map(([dom,subs])=>{
+    const n=[...subs.values()].reduce((a,x)=>a+x.length,0);
+    return `<section>
+      <div class="sec"><span class="mk"></span>
+        <h2><a href="#/domain/${encodeURIComponent(dom)}">${esc(dname(dom))}</a></h2>
+        <span class="c">${num(subs.size)} ${esc(T_.t_subs)} · ${num(n)} ${esc(T_.h_prod.toLowerCase())}</span></div>
+      ${[...subs.entries()].slice(0,4).map(([sub,ps])=>`<div class="subg">
+        <h3>${esc(L==="ar"&&ps[0].subdomain_ar?ps[0].subdomain_ar:sub)}</h3>
+        <div class="plist">${ps.map(productPill).join("")}</div></div>`).join("")}
+      ${subs.size>4?`<p class="note"><a href="#/domain/${encodeURIComponent(dom)}">${esc(T_.more)} (${num(subs.size-4)})</a></p>`:""}
+    </section>`;}).join("")}
+
+  <section>
+    <div class="sec"><span class="mk"></span><h2>${esc(T_.h_recent)}</h2></div>
+    <div class="card pad0 scroll"><table><thead><tr>
+      <th>${esc(T_.th_per)}</th><th>${esc(T_.th_prod)}</th><th>${esc(T_.th_title)}</th><th>${esc(T_.th_file)}</th>
+    </tr></thead><tbody>
+    ${recent.map(r=>`<tr><td>${esc(plabel(r.period))}</td>
+      <td><a href="#/product/${r.p.id}">${esc(pname(r.p))}</a></td>
+      <td>${esc(r.title)}</td><td class="mono">${esc(r.file)}</td></tr>`).join("")}
+    </tbody></table></div>
+  </section>`;
+}
+
+function vDomain(name){
+  const T_=t(), ps=D.products.filter(p=>p.domain===name);
+  const subs=groupTree(ps).get(name)||new Map();
+  const obs=ps.reduce((a,p)=>a+p.n_obs,0);
+  return `<p class="crumb"><a href="#/">${esc(T_.nav_home)}</a> › ${esc(dname(name))}</p>
+  <h1 class="page">${esc(dname(name))}</h1>
+  <p class="lede">${num(subs.size)} ${esc(T_.t_subs)} · ${num(ps.length)} ${esc(T_.h_prod.toLowerCase())} · ${num(obs)} ${esc(T_.k_obs.toLowerCase())}</p>
+  ${[...subs.entries()].map(([sub,list])=>`<div class="subg">
+    <h3>${esc(L==="ar"&&list[0].subdomain_ar?list[0].subdomain_ar:sub)}
+      <span style="text-transform:none;letter-spacing:0;font-weight:400"> · ${num(list.length)}</span></h3>
+    <div class="plist">${list.map(productPill).join("")}</div></div>`).join("")}`;
+}
+
+function vProduct(id){
+  const T_=t(), p=D.products.find(x=>x.id===id);
+  if(!p)return `<h1>—</h1>`;
+  const avail=seriesFor(p);
+  if(!picked.length||!avail.some(s=>picked.includes(s.id)))
+    picked=avail.slice(0,3).map(s=>s.id);
+  const multiBase=p.bases.length>1;
+  return `<p class="crumb"><a href="#/">${esc(T_.nav_home)}</a> ›
+    <a href="#/domain/${encodeURIComponent(p.domain)}">${esc(dname(p.domain))}</a> › ${esc(subname(p))}</p>
+  <h1 class="page">${esc(pname(p))}</h1>
+  <div class="grid g4" style="margin-bottom:20px">
+    <div class="card kpi"><div class="lab">${esc(T_.h_cov)}</div><div class="val" style="font-size:19px">${esc(p.first)} – ${esc(p.last)}</div></div>
+    <div class="card kpi"><div class="lab">${esc(T_.th_ser)}</div><div class="val">${num(p.series.length)}</div><div class="sub">${num(p.n_series)} total</div></div>
+    <div class="card kpi"><div class="lab">${esc(T_.th_obs)}</div><div class="val">${num(p.n_obs)}</div></div>
+    <div class="card kpi"><div class="lab">${esc(T_.th_rel)}</div><div class="val">${num(p.releases)}</div></div>
+  </div>
+  ${multiBase?`<div class="warnbox"><b>${esc(p.bases.join(" → "))}</b> — ${esc(T_.rebase)}</div>`:""}
+  ${p.series.length?`
+  <div class="card" style="margin-bottom:16px">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <h2 style="margin:0">${esc(T_.h_head)}</h2>
+      <div class="row">
+        <div class="srow" id="kinds" role="group" aria-label="${esc(T_.measure)}" style="min-width:270px">
+          ${kindsFor(p).map(k=>`<button data-k="${esc(k)}" class="${k===kindFilter?"on":""}">${esc(T_.kind_[k]||k)}</button>`).join("")}
+        </div>
+        <button id="reb">${esc(T_.idx100)}</button>
+        <button id="dl">${esc(T_.csv)}</button>
+      </div>
+    </div>
+    <div class="chart" id="c-main"></div>
+    <p class="muted" style="margin:10px 0 0">${esc(T_.p_series)}</p>
+    <div class="picker" style="margin-top:8px"><div class="chips" id="pick"></div></div>
+  </div>`:`<div class="warnbox">${esc(T_.none)}</div>`}
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h2>${esc(T_.h_break)}</h2>
+      <p class="muted" style="margin:0 0 6px">${esc(T_.p_break)}</p>
+      <div class="chart sm" id="c-break"></div></div>
+    <div class="card pad0"><div style="padding:16px 18px 0"><h2>${esc(T_.h_rel)}</h2></div>
+      <div class="scroll" style="max-height:300px"><table><thead><tr>
+      <th>${esc(T_.th_per)}</th><th>${esc(T_.th_title)}</th><th>${esc(T_.th_file)}</th></tr></thead><tbody>
+      ${p.recent.map(r=>`<tr><td>${esc(plabel(r.period))}</td><td>${esc(r.title)}</td>
+        <td class="mono">${esc(r.file)}</td></tr>`).join("")}</tbody></table></div></div>
+  </div>`;
+}
+
+function vCatalogue(){
+  const T_=t(), q=query.toLowerCase();
+  const ps=D.products.filter(p=>!q||pname(p).toLowerCase().includes(q)||
+    p.domain.toLowerCase().includes(q)||(p.subdomain+' '+(p.subdomain_ar||'')+' '+(p.name_ar||'')).toLowerCase().includes(q)||
+    p.series.some(s=>sname(s).toLowerCase().includes(q)));
+  const tree=groupTree(ps);
+  return `<h1 class="page">${esc(T_.nav_cat)}</h1>
+  <p class="lede">${esc(T_.p_cat)}</p>
+  ${[...tree.entries()].map(([dom,subs])=>`<section>
+    <div class="sec"><span class="mk"></span>
+      <h2><a href="#/domain/${encodeURIComponent(dom)}">${esc(dname(dom))}</a></h2>
+      <span class="c">${num(subs.size)} ${esc(T_.t_subs)} · ${num([...subs.values()].reduce((a,x)=>a+x.length,0))} ${esc(T_.h_prod.toLowerCase())}</span></div>
+    ${[...subs.entries()].map(([sub,list])=>`<div class="subg">
+      <h3>${esc(L==="ar"&&list[0].subdomain_ar?list[0].subdomain_ar:sub)}</h3>
+      <div class="plist">${list.map(productPill).join("")}</div></div>`).join("")}
+  </section>`).join("")}
+  <section><div class="sec"><span class="mk"></span><h2>${esc(T_.h_all)}</h2></div>
+  <div class="card pad0 scroll"><table><thead><tr>
+    <th>${esc(T_.th_prod)}</th><th>${esc(T_.th_dom)}</th><th class="n">${esc(T_.th_ser)}</th>
+    <th class="n">${esc(T_.th_obs)}</th><th>${esc(T_.th_span)}</th><th class="n">${esc(T_.th_rel)}</th>
+  </tr></thead><tbody>
+  ${ps.map(p=>`<tr><td><a href="#/product/${p.id}">${esc(pname(p))}</a>
+      <div class="muted">${esc(subname(p))}</div></td>
+    <td>${esc(dname(p.domain))}</td><td class="n">${num(p.n_series)}</td>
+    <td class="n">${num(p.n_obs)}</td><td>${esc(p.first)} – ${esc(p.last)}</td>
+    <td class="n">${num(p.releases)}</td></tr>`).join("")}
+  </tbody></table></div></section>`;
+}
+
+function vExplore(){
+  const T_=t(), q=query.toLowerCase();
+  const all=D.products.flatMap(p=>p.series.map(s=>({...s,p})));
+  const list=all.filter(s=>!q||sname(s).toLowerCase().includes(q)||pname(s.p).toLowerCase().includes(q))
+                .slice(0,400);
+  return `<h1 class="page">${esc(T_.nav_exp)}</h1><p class="lede">${esc(T_.p_exp)}</p>
+  <div class="card" style="margin-bottom:16px">
+    <div class="chart" id="c-exp"></div>
+    <div class="row" style="margin-top:10px;justify-content:space-between">
+      <span class="muted">${esc(T_.pick)} — ${expPicked.length}/6</span>
+      <div class="row"><button id="expclear">${esc(T_.clear)}</button><button id="expdl">${esc(T_.csv)}</button></div>
+    </div>
+  </div>
+  <div class="card"><div class="picker" style="max-height:340px"><div class="chips" id="expick">
+    ${list.map(s=>`<button class="chip ${expPicked.includes(s.p.id+"|"+s.id)?"on":""}"
+      data-k="${esc(s.p.id)}|${esc(s.id)}">${esc(sname(s))}
+      <span class="muted"> · ${esc(pname(s.p))}</span></button>`).join("")}
+    ${list.length>=400?`<p class="note">${esc(T_.exp_more)}</p>`:""}
+  </div></div></div>`;
+}
+
+
+function vMap(){
+  const T_=t();
+  if(!G)return `<h1 class="page">${esc(T_.h_map)}</h1><p class="lede">${esc(T_.p_map)}</p>
+    <div class="card"><p class="muted" style="margin:0">…</p></div>`;
+  const prods=[...new Map(G.metrics.map(m=>[m.product_id,m])).values()];
+  if(!mapSel.prod)mapSel.prod=prods[0].product_id;
+  const mine=G.metrics.filter(m=>m.product_id===mapSel.prod);
+  if(!mine.some(m=>m.id===mapSel.metric))mapSel.metric=mine[0].id;
+  const cur=G.metrics.find(m=>m.id===mapSel.metric);
+  if(!cur.periods.includes(mapSel.period))mapSel.period=cur.periods[cur.periods.length-1];
+  const pct=(G.mapped_obs/G.total_obs*100).toFixed(1);
+  return `<h1 class="page">${esc(T_.h_map)}</h1><p class="lede">${esc(T_.p_map)}</p>
+  <div class="card" style="margin-bottom:16px">
+    <div class="row" style="margin-bottom:12px">
+      <label class="muted">${esc(T_.m_prod)}</label>
+      <select id="mp">${prods.map(m=>`<option value="${esc(m.product_id)}" ${m.product_id===mapSel.prod?"selected":""}>${esc(prodName(m.product_id))}</option>`).join("")}</select>
+      <label class="muted">${esc(T_.m_metric)}</label>
+      <select id="mm" style="max-width:320px">${mine.map(m=>`<option value="${m.id}" ${m.id===mapSel.metric?"selected":""}>${esc(metricName(m))}</option>`).join("")}</select>
+      <label class="muted">${esc(T_.m_period)}</label>
+      ${cur.periods.length<=6
+        ? `<div class="srow" id="mperp" style="min-width:230px">${cur.periods.map(x=>`<button data-p="${esc(x)}" class="${x===mapSel.period?"on":""}">${esc(plabel(x))}</button>`).join("")}</div>`
+        : `<select id="mper">${cur.periods.map(x=>`<option value="${esc(x)}" ${x===mapSel.period?"selected":""}>${esc(plabel(x))}</option>`).join("")}</select>`}
+    </div>
+    <div class="grid g2">
+      <div class="chart" id="c-map" style="height:400px"></div>
+      <div class="scroll" style="max-height:400px"><table id="t-map"></table></div>
+    </div>
+    <p class="muted" style="margin:12px 0 0">${num(G.mapped_obs)} (${pct}%) ${esc(T_.m_cov)}. ${esc(T_.th_prod)}: <a href="#/product/${esc(cur.product_id)}">${esc(prodName(cur.product_id))}</a>.</p>
+  </div>`;
+}
+
+function vLens(){
+  const T_=t();
+  if(!G)return `<h1 class="page">${esc(T_.h_lens)}</h1><p class="lede">${esc(T_.p_lens)}</p>`;
+  return `<h1 class="page">${esc(T_.h_lens)}</h1><p class="lede">${esc(T_.p_lens)}</p>
+  <div class="warnbox">${esc(T_.lens_note)}</div>
+  <div class="grid g3">
+    ${G.themes.map(th=>`<div class="card">
+      <h3 style="font-size:17px">${esc(L==="ar"?th.ar:th.en)}</h3>
+      <p class="muted" style="margin:0 0 10px">${esc(L==="ar"?th.note_ar:th.note_en)}</p>
+      <div class="grid g4" style="margin-bottom:12px">
+        <div class="kpi"><div class="lab">${esc(T_.k_prod)}</div><div class="val" style="font-size:20px">${num(th.products.length)}</div></div>
+        <div class="kpi"><div class="lab">${esc(T_.k_obs)}</div><div class="val" style="font-size:20px">${num(th.n_obs)}</div></div>
+        <div class="kpi"><div class="lab">${esc(T_.h_cov)}</div><div class="val" style="font-size:15px">${esc(th.first)} – ${esc(th.last)}</div></div>
+      </div>
+      ${th.products.length<3?`<p class="muted" style="margin:0 0 10px"><b>${esc(T_.lens_gap)}</b></p>`:""}
+      <div class="chips">${th.products.map(pr=>`<a class="chip" href="#/product/${esc(pr.id)}">${esc(prodName(pr.id))}</a>`).join("")}</div>
+    </div>`).join("")}
+  </div>`;
+}
+
+function prodName(id){const p=D.products.find(x=>x.id===id);return p?pname(p):id;}
+function metricName(m){return (L==="ar"&&m.metric_ar)?m.metric_ar:m.metric;}
+function regName(id){const r=G.regions.find(x=>x.id===id);return r?(L==="ar"?r.ar:r.en):id;}
+
+function drawMap(){
+  if(!G||!geoJson||!$("#c-map"))return;
+  const cur=G.metrics.find(m=>m.id===mapSel.metric);
+  const vals=(G.values[mapSel.metric]||{})[mapSel.period]||{};
+  const entries=G.regions.filter(r=>vals[r.id]!=null).map(r=>({name:r.id,value:vals[r.id]}));
+  const missing=G.regions.filter(r=>vals[r.id]==null);
+  const nums=entries.map(e=>e.value);
+  const a=axis();
+  const lo=Math.min(...nums), hi=Math.max(...nums);
+  mkChart($("#c-map"),{backgroundColor:"transparent",animation:false,
+    tooltip:{trigger:"item",backgroundColor:a.card,borderColor:a.line,
+      textStyle:{color:cvar("--ink"),fontSize:12},
+      formatter:pt=>`${esc(regName(pt.name))}<br><b>${pt.value==null?"—":num(pt.value,2)}</b>`},
+    visualMap:{min:lo,max:hi,left:"left",bottom:14,calculable:true,
+      textStyle:{color:a.muted,fontSize:11},
+      inRange:{color:["#e1f5ee","#9fe1cb","#5dcaa5","#1d9e75","#0f6e56"]},
+      // A region GASTAT did not report is left neutral, not shaded as if it
+      // held a value at the bottom of the scale.
+      outOfRange:{color:cvar("--soft")}},
+    series:[{type:"map",map:"sau",roam:false,nameProperty:"name",
+      itemStyle:{borderColor:a.line,borderWidth:.6,areaColor:cvar("--soft")},
+      emphasis:{label:{show:false},itemStyle:{borderColor:cvar("--acc"),borderWidth:1.6}},
+      select:{disabled:true},
+      data:entries}]});
+  const ranked=entries.slice().sort((x,y)=>y.value-x.value);
+  const T_=t();
+  $("#t-map").innerHTML=`<thead><tr><th>${esc(T_.th_reg)}</th><th class="n">${esc(T_.th_val)}</th></tr></thead><tbody>`+
+    ranked.map(e=>`<tr><td>${esc(regName(e.name))}</td><td class="n">${num(e.value,2)}</td></tr>`).join("")+
+    missing.map(r=>`<tr><td class="muted">${esc(regName(r.id))}</td><td class="n muted">${esc(t().nodata)}</td></tr>`).join("")+
+    `</tbody>`;
+  const mp=$("#mp"), mm=$("#mm"), mper=$("#mper");
+  if(mp)mp.onchange=e=>{mapSel.prod=e.target.value;mapSel.metric=null;render();};
+  if(mm)mm.onchange=e=>{mapSel.metric=e.target.value;mapSel.period=null;render();};
+  if(mper)mper.onchange=e=>{mapSel.period=e.target.value;disposeCharts();drawMap();};
+  const mpp=$("#mperp");
+  if(mpp)mpp.onclick=e=>{const b=e.target.closest("[data-p]"); if(!b)return;
+    mapSel.period=b.dataset.p; render();};
+}
+
+/* ---------- chart wiring ---------- */
+let rebase=false;
+function drawProduct(p){
+  const sel=seriesFor(p).filter(s=>picked.includes(s.id));
+  if(sel.length&&$("#c-main")){
+    const {keys,out}=alignSeries(sel,rebase);
+    mkChart($("#c-main"),lineOpt(out,keys.map(plabel),{area:sel.length===1}));
+  }
+  if($("#c-break")){
+    const rows=p.breakdown.slice(0,14).map(b=>({label:bname(b).slice(0,46),value:b.value}));
+    if(rows.length)mkChart($("#c-break"),barOpt(rows));
+  }
+  const box=$("#pick");
+  if(box){box.innerHTML=seriesFor(p).map(s=>`<button class="chip ${picked.includes(s.id)?"on":""}"
+      data-s="${esc(s.id)}">${esc(sname(s))}</button>`).join("");
+    box.onclick=e=>{const b=e.target.closest("[data-s]"); if(!b)return;
+      const id=b.dataset.s;
+      picked=picked.includes(id)?picked.filter(x=>x!==id):[...picked,id].slice(-6);
+      disposeCharts(); drawProduct(p);};}
+  const kb=$("#kinds");
+  if(kb)kb.onclick=e=>{const b=e.target.closest("[data-k]"); if(!b)return;
+    kindFilter=b.dataset.k; picked=[]; render();};
+  const rb=$("#reb"); if(rb){rb.classList.toggle("on",rebase);
+    rb.onclick=()=>{rebase=!rebase;disposeCharts();drawProduct(p);};}
+  const dl=$("#dl"); if(dl)dl.onclick=()=>downloadCSV(sel,pname(p),dl);
+}
+function drawExplore(){
+  const all=D.products.flatMap(p=>p.series.map(s=>({...s,p})));
+  const sel=expPicked.map(k=>all.find(s=>s.p.id+"|"+s.id===k)).filter(Boolean);
+  if($("#c-exp")){
+    if(sel.length){const {keys,out}=alignSeries(sel,true);
+      out.forEach((o,i)=>o.name=sname(sel[i])+" · "+pname(sel[i].p));
+      mkChart($("#c-exp"),lineOpt(out,keys.map(plabel)));
+    }else{mkChart($("#c-exp"),lineOpt([],[],{legend:false}));}
+  }
+  const box=$("#expick");
+  if(box)box.onclick=e=>{const b=e.target.closest("[data-k]"); if(!b)return;
+    const k=b.dataset.k;
+    expPicked=expPicked.includes(k)?expPicked.filter(x=>x!==k):[...expPicked,k].slice(-6);
+    render();};
+  const c=$("#expclear"); if(c)c.onclick=()=>{expPicked=[];render();};
+  const d=$("#expdl"); if(d)d.onclick=()=>downloadCSV(sel,"saudi360-compare",d);
+}
+// Saving a file goes through the host when the page runs inside the artifact
+// viewer, which never lets a page download on its own; a plain <a download>
+// there is a button that does nothing. Self-hosted, there is no host to ask,
+// so the anchor is the fallback rather than the primary path.
+let saver=null, saverReady=false;
+async function getSaver(){
+  if(saverReady)return saver;
+  saverReady=true;
+  try{ saver=(window.claude&&claude.use)?await claude.use("downloads"):null; }
+  catch(e){ saver=null; }
+  return saver;
+}
+function csvText(list){
+  const keys=[...new Set(list.flatMap(s=>s.pts.map(p=>p[0])))].sort((a,b)=>pkey(a)-pkey(b));
+  const head=["period",...list.map(s=>sname(s).replace(/"/g,"'"))];
+  const lines=[head.map(h=>`"${h}"`).join(",")];
+  keys.forEach(k=>{const m=list.map(s=>{const f=s.pts.find(p=>p[0]===k);return f?f[1]:"";});
+    lines.push([k,...m].join(","));});
+  return "﻿"+lines.join("\n");
+}
+async function downloadCSV(list,name,btn){
+  if(!list.length)return;
+  const filename=name.replace(/[^\w؀-ۿ]+/g,"_").slice(0,80)+".csv";
+  const text=csvText(list);
+  const dl=await getSaver();
+  if(dl){
+    try{ await dl.save({filename,data:text}); }
+    catch(err){
+      if(err&&err.code==="declined")return;          // viewer said no; not an error
+      if(btn)btn.textContent=t().csv_fail;
+    }
+    return;
+  }
+  const blob=new Blob([text],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+
+
+/* ---------- SQL console over Parquet ---------- */
+// The warehouse lives as Parquet next to the site. DuckDB-WASM reads it with
+// HTTP range requests, so a query for one series pulls a few row groups rather
+// than the whole 48 MB -- which is why this needs no server at all.
+let duck=null, duckState="idle", duckErr=null;
+const DATA_BASE = (window.SAUDI360_DATA_BASE || "data");
+const PARQUET = ["fact_observation","dim_series","dim_product","dim_release",
+                 "dim_geography","dim_place_label"];
+const EXAMPLES = [
+  ["Headline CPI, last 12 months",
+   "SELECT period, round(value,2) AS index_value\nFROM fact_observation f JOIN dim_series s USING (series_key)\nWHERE s.category_id = '121421' AND lower(s.row_en) = 'general index'\n  AND s.kind = 'index' AND s.table_name = '2.1' AND s.index_base = '2023'\nORDER BY period DESC LIMIT 12"],
+  ["Biggest products by observation count",
+   "SELECT p.product, count(*) AS observations\nFROM fact_observation f JOIN dim_product p USING (product_key)\nGROUP BY 1 ORDER BY 2 DESC LIMIT 15"],
+  ["Longest series in the corpus",
+   "SELECT s.row_en, s.col_en, p.product, count(*) AS points,\n       min(f.period) AS first, max(f.period) AS last\nFROM fact_observation f\nJOIN dim_series s USING (series_key)\nJOIN dim_product p ON p.product_key = f.product_key\nWHERE NOT s.ambiguous AND NOT s.suspect\nGROUP BY 1,2,3 ORDER BY points DESC LIMIT 15"],
+  ["Series flagged as unreliable",
+   "SELECT p.product, count(*) AS series,\n       sum(CASE WHEN s.ambiguous THEN 1 ELSE 0 END) AS ambiguous,\n       sum(CASE WHEN s.suspect  THEN 1 ELSE 0 END) AS mixed_measure\nFROM dim_series s JOIN dim_product p USING (product_key)\nGROUP BY 1 ORDER BY ambiguous DESC LIMIT 15"],
+];
+
+async function duckReady(){
+  if(duck)return duck;
+  if(duckState==="failed")return null;
+  duckState="loading";
+  try{
+    const mod=await import("https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm");
+    const bundle=await mod.selectBundle(mod.getJsDelivrBundles());
+    const worker=await mod.createWorker(bundle.mainWorker);
+    const db=new mod.AsyncDuckDB(new mod.ConsoleLogger(mod.LogLevel.ERROR),worker);
+    await db.instantiate(bundle.mainModule,bundle.pthreadWorker);
+    const con=await db.connect();
+    // Each table becomes a view over its Parquet file, read remotely. The URL
+    // must be absolute: DuckDB's own filesystem does not resolve a relative
+    // path against the page, it just reports the file as missing.
+    for(const t of PARQUET){
+      const url=new URL(`${DATA_BASE}/${t}.parquet`, location.href).href;
+      await con.query(`CREATE OR REPLACE VIEW ${t} AS SELECT * FROM read_parquet('${url}')`);
+    }
+    duck={db,con}; duckState="ready"; return duck;
+  }catch(e){ duckErr=e; duckState="failed"; return null; }
+}
+
+function vData(){
+  const T_=t();
+  return `<h1 class="page">${esc(T_.h_sql)}</h1>
+  <p class="lede">${esc(T_.p_sql)}</p>
+  <div class="card" style="margin-bottom:14px">
+    <div class="subg" style="border-top:0;padding-top:0">
+      <h3>${esc(T_.sql_ex)}</h3>
+      <div class="plist" id="sqlex">
+        ${EXAMPLES.map((e,i)=>`<button class="chip" data-i="${i}">${esc(e[0])}</button>`).join("")}
+      </div>
+    </div>
+    <textarea id="sql" spellcheck="false" rows="9" style="width:100%;font-family:ui-monospace,Menlo,monospace;
+      font-size:13px;line-height:1.6;background:var(--rail);border:1px solid var(--line);
+      border-radius:6px;padding:12px;color:var(--ink);resize:vertical">${esc(EXAMPLES[0][1])}</textarea>
+    <div class="row" style="margin-top:10px;justify-content:space-between">
+      <span class="muted" id="sqlstat">${esc(T_.sql_loading)}</span>
+      <button id="sqlrun">${esc(T_.sql_run)}</button>
+    </div>
+  </div>
+  <div class="card pad0 scroll" id="sqlout"></div>`;
+}
+
+async function wireData(){
+  const T_=t(), stat=$("#sqlstat"), out=$("#sqlout");
+  const ex=$("#sqlex");
+  if(ex)ex.onclick=e=>{const b=e.target.closest("[data-i]"); if(!b)return;
+    $("#sql").value=EXAMPLES[+b.dataset.i][1];};
+  const d=await duckReady();
+  if(!d){ if(stat){stat.textContent=T_.sql_unavail;} return; }
+  try{
+    const r=await d.con.query("SELECT (SELECT count(*) FROM fact_observation) AS n, (SELECT count(*) FROM dim_product) AS p");
+    const row=r.toArray()[0];
+    if(stat)stat.textContent=T_.sql_ready.replace("{n}",num(Number(row.n))).replace("{p}",num(Number(row.p)));
+  }catch(e){ if(stat)stat.textContent=T_.sql_unavail; return; }
+
+  const run=async()=>{
+    const q=$("#sql").value.trim(); if(!q)return;
+    stat.textContent=T_.sql_running;
+    const t0=performance.now();
+    try{
+      const res=await d.con.query(q);
+      const rows=res.toArray().slice(0,500);
+      const ms=Math.round(performance.now()-t0);
+      stat.textContent=T_.sql_rows.replace("{n}",num(rows.length)).replace("{ms}",num(ms));
+      if(!rows.length){ out.innerHTML=`<p class="muted" style="padding:16px">0</p>`; return; }
+      const cols=Object.keys(rows[0]);
+      out.innerHTML=`<table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead>
+        <tbody>${rows.map(r=>`<tr>${cols.map(c=>{
+          const v=r[c];
+          const isNum=typeof v==="number"||typeof v==="bigint";
+          return `<td${isNum?' class="n"':''}>${esc(v==null?"—":(typeof v==="bigint"?v.toString():v))}</td>`;
+        }).join("")}</tr>`).join("")}</tbody></table>
+        ${rows.length>=500?`<p class="note" style="padding:0 12px 12px">${esc(T_.sql_limit)}</p>`:""}`;
+    }catch(e){
+      stat.textContent=T_.sql_err;
+      out.innerHTML=`<pre class="mono" style="padding:16px;white-space:pre-wrap;color:var(--warn)">${esc(String(e.message||e))}</pre>`;
+    }
+  };
+  $("#sqlrun").onclick=run;
+  $("#sql").addEventListener("keydown",e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();run();}});
+  run();
+}
+
+/* ---------- router ---------- */
+function render(){
+  disposeCharts();
+  const T_=t();
+  document.documentElement.setAttribute("dir",T_.dir);
+  document.querySelectorAll("[data-t]").forEach(el=>{const k=el.dataset.t;
+    if(k==="dark")el.textContent=document.documentElement.getAttribute("data-theme")==="light"?T_.dark:T_.light;
+    else if(T_[k])el.textContent=T_[k];});
+  document.querySelectorAll("[data-t-ph]").forEach(el=>el.placeholder=T_[el.dataset.tPh]||"");
+  $("#lang").textContent=L==="en"?"العربية":"English";
+
+  const h=(location.hash||"#/").slice(1);
+  document.querySelectorAll("a.tab").forEach(a=>a.classList.toggle("on",a.dataset.nav===h));
+  const v=$("#view");
+  if(h.startsWith("/product/")){const id=decodeURIComponent(h.slice(9));
+    v.innerHTML=vProduct(id); drawProduct(D.products.find(p=>p.id===id));}
+  else if(h.startsWith("/domain/")){v.innerHTML=vDomain(decodeURIComponent(h.slice(8)));}
+  else if(h==="/catalogue"){v.innerHTML=vCatalogue();}
+  else if(h==="/explore"){v.innerHTML=vExplore(); drawExplore();}
+  else if(h==="/data"){v.innerHTML=vData(); wireData();}
+  else if(h==="/map"){v.innerHTML=vMap();
+    if(!G){loadGeo().then(ok=>{ if(ok&&(location.hash||"#/").slice(1)==="/map"){
+      v.innerHTML=vMap(); drawMap(); } else if(!ok){
+      v.innerHTML='<div class="warnbox"><b>Could not load the map data.</b></div>'; }});}
+    else drawMap();}
+  else if(h==="/lens"){
+    if(!G){loadGeo().then(()=>{ if((location.hash||"#/").slice(1)==="/lens") v.innerHTML=vLens(); });}
+    v.innerHTML=vLens();}
+  else {v.innerHTML=vHome();}
+  window.scrollTo({top:0});
+}
+
+addEventListener("hashchange",()=>{picked=[];render();});
+addEventListener("resize",()=>charts.forEach(c=>c.resize()));
+$("#lang").onclick=()=>{L=L==="en"?"ar":"en";render();};
+document.documentElement.setAttribute("data-theme","dark");
+$("#theme").onclick=()=>{
+  const light=document.documentElement.getAttribute("data-theme")==="light";
+  document.documentElement.setAttribute("data-theme",light?"dark":"light");render();};
+$("#q").oninput=e=>{query=e.target.value;
+  const h=(location.hash||"#/").slice(1);
+  if(h!=="/catalogue"&&h!=="/explore"){location.hash="#/catalogue";}else{render();}
+  $("#q").focus();};
+
+fetch("app.json",{cache:"no-cache"}).then(r=>r.json()).then(d=>{
+  D=d;
+  D.products.sort((a,b)=>b.n_obs-a.n_obs);
+  render();
+}).catch(e=>{$("#view").innerHTML=
+  '<div class="warnbox"><b>Could not load app.json.</b> '+esc(e)+'</div>';});
+</script>

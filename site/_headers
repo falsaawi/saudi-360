@@ -1,0 +1,24 @@
+# Cloudflare Pages reads this file to set response headers.
+#
+# The data payloads are rebuilt on every export, so they must revalidate rather
+# than sit in a CDN or browser cache showing last month's figures. The geometry
+# never changes, so it can be cached hard.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+
+# The page itself changes whenever the site is redeployed.
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Data: revalidate every load, but allow a 304 when nothing changed.
+/app.json
+  Cache-Control: public, max-age=0, must-revalidate
+/geo.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Administrative boundaries are fixed; cache them for a year.
+/geo/*
+  Cache-Control: public, max-age=31536000, immutable
