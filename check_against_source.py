@@ -13,6 +13,7 @@ Exit code is non-zero when any check fails, so it can gate a deploy.
 
 from __future__ import annotations
 
+import json
 import logging
 import sys
 from pathlib import Path
@@ -21,6 +22,7 @@ import duckdb
 
 ROOT = Path(__file__).parent
 DB = ROOT / "data" / "saudi360.duckdb"
+APP = ROOT / "site" / "app.json"
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 log = logging.getLogger("check")
@@ -137,6 +139,103 @@ SHAPE = [
     """),
 ]
 
+# Products whose charts a reader is most likely to open, and which must
+# therefore open on current figures. Pinned by hand: a generated list would
+# quietly shrink the moment one of them broke.
+HEADLINE_PRODUCTS = {
+    "120038": "Gross Domestic Product",
+    "121421": "Consumer Prices",
+    "121920": "Real Estate Prices",
+    "123454": "Industrial Production",
+    "123481": "International Trade",
+    "417515": "Labour Market",
+}
+
+
+def year(period: str) -> int:
+    """The year a period string names, or 0. Period strings are never compared
+    whole across types: "2026-03" and "2026-Q1" are the same quarter written
+    two ways, and comparing the text reports a gap that is not there."""
+    head = (period or "")[:4]
+    return int(head) if head.isdigit() else 0
+
+
+def check_site_currency(con) -> int:
+    """Assert the site charts the newest data it is able to chart.
+
+    Every value assertion above passed twice while the site drew series that
+    stopped two years before the data did -- once because one measure had come
+    apart into several runs, once because a discontinued run outranked the live
+    one on length. Checking values says nothing about WHICH series a reader is
+    shown, so these check that instead.
+
+    The comparison is against v_chartable, the warehouse's own definition of
+    what may be drawn, not against the product's raw coverage: a product whose
+    recent releases publish single-period tables has nothing current to chart,
+    and failing it for that would be a check that cries wolf until it is
+    deleted.
+    """
+    if not APP.exists():
+        log.error("\n=== what the site charts ===")
+        log.error("  FAIL  missing %s -- run export_site.py", APP.name)
+        return 1
+
+    app = json.loads(APP.read_text(encoding="utf-8"))
+    reach = {
+        cat: last for cat, last in con.execute("""
+            SELECT category_id, MAX(last_period) FROM v_chartable GROUP BY 1
+        """).fetchall()
+    }
+    failed = 0
+    log.info("\n=== what the site charts ===")
+
+    stale_named = []
+    for p in app["products"]:
+        if not p["series"]:
+            continue
+        drawn = max(s["pts"][-1][0] for s in p["series"])
+        best = reach.get(p["id"], "")
+        # No slack here: this asks only whether the newest chartable series is
+        # charted at all, and some series in the product reaches that period by
+        # construction.
+        if year(drawn) < year(best):
+            stale_named.append((p["name"], drawn, best))
+
+    if stale_named:
+        log.error("  FAIL  %-58s %d product(s)",
+                  "charts reach the newest chartable series", len(stale_named))
+        for nm, drawn, best in stale_named[:6]:
+            log.error("          %-40s charts to %s, could reach %s", nm[:40], drawn, best)
+        failed += 1
+    else:
+        log.info("  ok    %-58s %s", "charts reach the newest chartable series",
+                 f"{len(app['products'])} products")
+
+    # The first series is the one the page opens on, so it carries the burden
+    # of the product's headline: it is what a reader sees before touching a
+    # control, and it is exactly what was wrong on Consumer Prices.
+    for cat, label in sorted(HEADLINE_PRODUCTS.items(), key=lambda kv: kv[1]):
+        p = next((x for x in app["products"] if x["id"] == cat), None)
+        if p is None or not p["series"]:
+            log.error("  FAIL  %-58s no charted series", f"{label}: opens on current data")
+            failed += 1
+            continue
+        head = p["series"][0]
+        first = head["pts"][-1][0]
+        best = reach.get(cat, "")
+        # Slack for an annual series only. Giving every series a year of it let
+        # Industrial Production open on a monthly run ending a year behind the
+        # monthly data and still be called current.
+        slack = 1 if head.get("freq") == "annual" else 0
+        if year(first) < year(best) - slack:
+            log.error("  FAIL  %-58s opens on %s, data to %s",
+                      f"{label}: opens on current data", first, best)
+            failed += 1
+        else:
+            log.info("  ok    %-58s %s", f"{label}: opens on current data", first)
+
+    return failed
+
 
 def main() -> int:
     if not DB.exists():
@@ -176,6 +275,8 @@ def main() -> int:
         else:
             log.error("  FAIL  %-58s expected %s, got %s", name, expect, f"{got:,}")
             failed += 1
+
+    failed += check_site_currency(con)
 
     # Reported for context rather than asserted: these move as coverage improves.
     log.info("\n=== coverage (informational) ===")

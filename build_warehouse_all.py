@@ -31,6 +31,10 @@ FACTS = DATA / "parsed" / "facts.csv"
 FILES_CSV = DATA / "catalog" / "release_files.csv"
 DB = DATA / "saudi360.duckdb"
 
+# Fewest points that can honestly be drawn as a line. Defined here because
+# v_chartable is what both the exporter and the checks read.
+MIN_CHART_POINTS = 3
+
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s  %(levelname)-7s %(message)s", datefmt="%H:%M:%S"
 )
@@ -332,6 +336,27 @@ def main() -> int:
     con.execute("""
         CREATE VIEW v_ambiguous_series AS
         SELECT * FROM series_ambiguity WHERE max_distinct > 1
+    """)
+
+    # What the site is allowed to draw. It lives here rather than in the
+    # exporter so that the exporter and the checks cannot drift apart: a check
+    # that the page charts the most recent data available is only worth
+    # anything if "available" means the same thing to both.
+    con.execute(f"""
+        CREATE VIEW v_chartable AS
+        SELECT v.* FROM v_series_span v
+        WHERE v.n_points >= {MIN_CHART_POINTS}
+          AND v.kind <> 'weight'
+          -- a series mixing index levels with percentage changes draws a
+          -- plausible-looking but meaningless line
+          AND v.series_key NOT IN (SELECT series_key FROM v_suspect_series)
+          -- and never chart a value the source does not pin down uniquely
+          AND v.series_key NOT IN (SELECT series_key FROM v_ambiguous_series)
+          -- a series that never moves is not a measurement; several tables
+          -- carry a row-number column headed "Index" which parses as one
+          AND v.series_key IN (
+              SELECT series_key FROM fact_observation
+              GROUP BY series_key HAVING MIN(value) <> MAX(value))
     """)
 
     log.info("--- built ---")

@@ -30,6 +30,9 @@ OUT = ROOT / "site" / "app.json"
 
 MAX_SERIES_PER_PRODUCT = 45
 MIN_POINTS = 3
+# Below this a series is too thin to carry a product's headline slot, however
+# promising its label reads.
+THIN_POINTS = 8
 MAX_BREAKDOWN = 20
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-7s %(message)s",
@@ -171,26 +174,15 @@ def main() -> int:
         "SELECT max(last_period) FROM v_product_coverage").fetchone()[0]}
 
     for cat, name, domain, sub, n_rel, n_ser, n_obs, first, last in products:
-        # Candidate series: long enough to draw, on one base, not an index column
-        # of row numbers.
+        # Candidate series. v_chartable is the warehouse's own definition of
+        # what may be drawn; the checks read the same view, so a check that the
+        # page shows the most recent data available cannot be satisfied by the
+        # two disagreeing about what is available.
         cand = con.execute("""
             SELECT series_key, row_en, row_ar, col_en, col_ar, kind, index_base,
                    n_points, first_period, last_period, period_type, table_name
-            FROM v_series_span
-            WHERE category_id = ? AND n_points >= ? AND kind <> 'weight'
-              -- a series that mixes index levels with percentage changes draws a
-              -- plausible-looking but meaningless line; keep those off the charts
-              AND series_key NOT IN (SELECT series_key FROM v_suspect_series)
-              -- and never chart a value the source does not pin down uniquely
-              AND series_key NOT IN (SELECT series_key FROM v_ambiguous_series)
-              -- A series that never moves is not a measurement. Several tables
-              -- carry a row-number column headed "Index", which parses as a long
-              -- constant series and, being long, outranks the real indicators
-              -- unless it is dropped BEFORE the selection rather than after.
-              AND series_key IN (
-                  SELECT series_key FROM fact_observation
-                  GROUP BY series_key HAVING MIN(value) <> MAX(value)
-              )
+            FROM v_chartable
+            WHERE category_id = ? AND n_points >= ?
             ORDER BY n_points DESC, row_en
         """, [cat, MIN_POINTS]).fetchall()
 
@@ -229,11 +221,18 @@ def main() -> int:
                 tier = 2
             else:
                 tier = 3
-            # A year of slack, so an annual series is not called stale merely
-            # for being annual while a monthly one has moved on.
+            # A headline label on a three-point stub is not a headline. Industrial
+            # Production opened on one of those while twenty-two months of the
+            # same index sat unused behind it.
+            if r[7] < THIN_POINTS:
+                tier += 1
+            # How far behind the front this series ends comes FIRST, ahead of
+            # what its label promises. A headline that stopped in 2018 is not a
+            # headline any more, and letting the label win put a series eight
+            # years stale at the top of Consumer Prices.
             year = int(r[9][:4]) if r[9][:4].isdigit() else 0
-            stale = 0 if year >= current_year - 1 else 1
-            return (stale, tier, -r[7])
+            behind = max(0, current_year - year)
+            return (behind, tier, -r[7])
         def labels_of(r):
             """The pair a reader would see, or None when there is nothing to show.
 
@@ -273,40 +272,20 @@ def main() -> int:
         seen_rows.update(groups)
         chosen = sorted(groups.values(), key=score)[:MAX_SERIES_PER_PRODUCT]
 
-        # Two series earn a slot whatever their rank: the one reaching furthest
-        # forward, so the page shows where the product stands now, and the one
-        # reaching furthest back, so a rebase does not cost the reader the whole
-        # history behind it. Consumer Prices needs both -- its live 2023-based
-        # run is 25 points and the 2018-based run it replaced is 56, and the
-        # regional breakdowns would otherwise crowd out whichever came second.
-        pool = list(groups.values())
-
-        def ensure(pick):
-            if pick is None or any(c[0] == pick[0] for c in chosen):
-                return
-            if len(chosen) >= MAX_SERIES_PER_PRODUCT:
-                chosen.pop()
-            chosen.append(pick)
-
-        if pool:
-            newest = max(r[9] for r in pool)
-            ensure(min((r for r in pool if r[9] == newest), key=score))
-            ensure(max(pool, key=lambda r: r[7]))
-
-        series = []
-        for r in chosen:
+        def build(r):
+            """A candidate as the site would draw it, or None if it cannot be."""
             pts = con.execute("""
                 SELECT period, value FROM fact_observation
                 WHERE series_key = ? ORDER BY period
             """, [r[0]]).fetchall()
             if len(pts) < MIN_POINTS:
-                continue
+                return None
             # A line that never moves carries no information and, when it is a
             # run of zeros from a code column, is not a measurement at all.
             vals = [v for _, v in pts]
             if max(vals) == min(vals):
-                continue
-            series.append({
+                return None
+            return {
                 "id": r[0][:12],
                 "row": tidy(r[1]), "row_ar": " ".join((r[2] or "").split()),
                 "col": tidy(r[3]), "col_ar": " ".join((r[4] or "").split()),
@@ -315,7 +294,54 @@ def main() -> int:
                 # tell a reader exactly which sheet to open to check it.
                 "table": r[11] or "",
                 "pts": [[p, round(v, 3)] for p, v in pts],
-            })
+            }
+
+        drawn: list[tuple] = []          # (candidate, payload)
+        for r in chosen:
+            row = build(r)
+            if row:
+                drawn.append((r, row))
+
+        # Two series earn a slot whatever their rank: the one reaching furthest
+        # forward, so the page shows where the product stands now, and the one
+        # reaching furthest back, so a rebase does not cost the reader the whole
+        # history behind it. Consumer Prices needs both -- its live 2023-based
+        # run is 25 points and the 2018-based run it replaced is 56, and the
+        # regional breakdowns would otherwise crowd out whichever came second.
+        #
+        # This runs over what SURVIVED the filters above, not over the picks
+        # made before them: a guaranteed slot that is then dropped for being
+        # constant or too short is not a guarantee, which is how two products
+        # still charted nothing current.
+        # It searches every candidate, not just the one representative kept per
+        # identity: the newest run of a measure is often not its longest, so
+        # picking representatives by length hides it from the guarantee that
+        # exists to find it.
+        def guarantee(order, already):
+            if not ranked or already():
+                return
+            have = {c[0] for c, _ in drawn}
+            for r in sorted(ranked, key=order):
+                if r[0] in have:
+                    continue
+                row = build(r)
+                if row:
+                    if len(drawn) >= MAX_SERIES_PER_PRODUCT:
+                        drawn.pop()
+                    drawn.append((r, row))
+                    return
+
+        def yr(p):
+            return int(p[:4]) if p[:4].isdigit() else 0
+
+        front = max((yr(r[9]) for r in ranked), default=0)
+        longest = max((r[7] for r in ranked), default=0)
+        guarantee(lambda r: (-yr(r[9]), score(r)),
+                  lambda: any(yr(c[9]) >= front for c, _ in drawn))
+        guarantee(lambda r: -r[7],
+                  lambda: any(c[7] >= longest for c, _ in drawn))
+
+        series = [row for _, row in drawn]
 
         # When a product's charted series sit on more than one base, the base is
         # part of what tells them apart: a rebased index keeps its label, so two
