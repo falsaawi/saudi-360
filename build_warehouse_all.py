@@ -28,6 +28,7 @@ import duckdb
 ROOT = Path(__file__).parent
 DATA = ROOT / "data"
 FACTS = DATA / "parsed" / "facts.csv"
+FILES_CSV = DATA / "catalog" / "release_files.csv"
 DB = DATA / "saudi360.duckdb"
 
 logging.basicConfig(
@@ -84,17 +85,39 @@ def main() -> int:
     """)
     log.info("  raw rows: %s", f"{con.execute('SELECT COUNT(*) FROM raw').fetchone()[0]:,}")
 
+    # Where each workbook sits on GASTAT, so a reader can open the file a figure
+    # was read from and check the cell. The crawl catalogue keys files by content
+    # digest and the same file is published under several products, so take one
+    # URL per (product, digest) -- joining on the digest alone would multiply
+    # every release row by the number of products sharing that file.
+    if FILES_CSV.exists():
+        con.execute(f"""
+            CREATE TABLE file_url AS
+            SELECT category_id, sha256, any_value(url) AS url
+            FROM read_csv('{FILES_CSV.as_posix()}', header=true, all_varchar=true)
+            WHERE sha256 IS NOT NULL AND url IS NOT NULL
+            GROUP BY category_id, sha256
+        """)
+    else:
+        log.warning("no %s — releases will carry no source link", FILES_CSV.name)
+        con.execute("CREATE TABLE file_url (category_id VARCHAR, sha256 VARCHAR, url VARCHAR)")
+
     # Release recency: the pub_id whose own period is latest wins a tie.
     con.execute("""
         CREATE TABLE dim_release AS
-        SELECT DISTINCT
-            md5(category_id || '|' || pub_id)        AS release_key,
-            category_id, pub_id,
-            any_value(release_title)                 AS title,
-            any_value(source_file)                   AS source_file,
-            any_value(source_sha256)                 AS source_sha256,
-            max(period)                              AS max_period
-        FROM raw GROUP BY category_id, pub_id
+        WITH r AS (
+            SELECT
+                md5(category_id || '|' || pub_id)    AS release_key,
+                category_id, pub_id,
+                any_value(release_title)             AS title,
+                any_value(source_file)               AS source_file,
+                any_value(source_sha256)             AS source_sha256,
+                max(period)                          AS max_period
+            FROM raw GROUP BY category_id, pub_id
+        )
+        SELECT r.*, u.url AS source_url
+        FROM r LEFT JOIN file_url u
+          ON u.category_id = r.category_id AND u.sha256 = r.source_sha256
     """)
 
     con.execute("""
@@ -185,7 +208,7 @@ def main() -> int:
     con.execute("""
         CREATE VIEW v_series_span AS
         SELECT s.series_key, s.category_id, s.row_en, s.row_ar, s.col_en, s.col_ar,
-               s.kind, s.index_base,
+               s.kind, s.index_base, s.table_name,
                any_value(f.period_type) AS period_type,
                COUNT(*) AS n_points,
                MIN(f.period) AS first_period, MAX(f.period) AS last_period

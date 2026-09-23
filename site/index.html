@@ -90,7 +90,9 @@
     border:1px solid var(--line)}
   .tag.acc{background:rgba(0,157,173,.14);color:var(--acc2);border-color:transparent}
 
-  .kpis2{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));gap:1px;
+  /* Five pinned headlines: at 186px they fit four to a row on a laptop and the
+     fifth sat alone against an empty half-row. 150px lets all five share one. */
+  .kpis2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
     background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0}
   .kpi2{background:var(--panel);padding:18px 20px}
   .kpi2 .n{font-family:var(--cond);font-size:38px;font-weight:700;line-height:1;color:var(--ink);
@@ -221,6 +223,8 @@ const T={
   th_prod:"Product",th_dom:"Domain",th_ser:"Series",th_obs:"Observations",th_span:"Coverage",
   th_rel:"Releases",th_item:"Item",th_val:"Value",th_w:"Weight %",th_per:"Period",th_file:"Source file",
   th_title:"Release",
+  src_tbl:"Read from",src_one:"table",src_many:"tables",
+  src_hint:"Open the GASTAT workbook and compare the figures yourself.",
   none:"No time series in this product — GASTAT publishes it as a single-period table, so it is shown as a breakdown instead.",
   rebase:"This product's index was rebased during the period shown. Series on different bases are kept separate and never joined.",
   idx100:"Re-base to 100",raw:"Raw values",csv:"Download CSV",csv_fail:"Save unavailable",
@@ -265,6 +269,8 @@ const T={
   th_prod:"المنتج",th_dom:"المجال",th_ser:"السلاسل",th_obs:"المشاهدات",th_span:"التغطية",
   th_rel:"الإصدارات",th_item:"البند",th_val:"القيمة",th_w:"الوزن %",th_per:"الفترة",th_file:"الملف المصدر",
   th_title:"الإصدار",
+  src_tbl:"مقروءة من",src_one:"جدول",src_many:"جداول",
+  src_hint:"افتح ملف الهيئة وقارن الأرقام بنفسك.",
   none:"لا توجد سلاسل زمنية لهذا المنتج — تنشره الهيئة كجدول لفترة واحدة، لذا يُعرض كتوزيع.",
   rebase:"أُعيد تحديد سنة الأساس لهذا المؤشر خلال الفترة المعروضة. تُفصل السلاسل ذات الأساس المختلف ولا تُوصل.",
   idx100:"إعادة الأساس إلى ١٠٠",raw:"القيم الأصلية",csv:"تنزيل CSV",csv_fail:"التنزيل غير متاح",
@@ -317,6 +323,18 @@ function plabel(p){const m=/^(\d{4})(?:-(Q)?(\d{1,2}))?$/.exec(p||"");
 const sname=s=>{const a=L==="ar"?(s.row_ar||s.row):(s.row||s.row_ar),
                 b=L==="ar"?(s.col_ar||s.col):(s.col||s.col_ar);
   return [a,b].filter(Boolean).join(" · ")||"—";};
+// The source file, linked back to GASTAT so a reader can open the workbook and
+// check the figure against the cell it was read from. Only a path on GASTAT's
+// own document server becomes a link; anything else stays plain text, so a
+// malformed catalogue row can never turn into a link somewhere else.
+const GASTAT="https://www.stats.gov.sa";
+function srcLink(r){
+  const f=esc(r.file||"—");
+  if(!r.url||!/^\/documents\//.test(r.url))return f;
+  return `<a href="${esc(GASTAT+r.url)}" target="_blank" rel="noopener noreferrer">${f}</a>`;
+}
+// The workbook tables a set of plotted series was read from.
+const srcTables=ss=>[...new Set(ss.map(s=>(s.table||"").trim()).filter(Boolean))].sort();
 // Arabic names exist for 16 of 20 products; the four archived series are not in
 // GASTAT's live Arabic taxonomy, so they keep their English name rather than a
 // machine translation of an official statistical title.
@@ -519,7 +537,8 @@ function vProduct(id){
       </div>
     </div>
     <div class="chart" id="c-main"></div>
-    <p class="muted" style="margin:10px 0 0">${esc(T_.p_series)}</p>
+    <p class="muted" style="margin:10px 0 0" id="prov"></p>
+    <p class="muted" style="margin:6px 0 0">${esc(T_.p_series)}</p>
     <div class="picker" style="margin-top:8px"><div class="chips" id="pick"></div></div>
   </div>`:`<div class="warnbox">${esc(T_.none)}</div>`}
   <div class="grid g2" style="margin-bottom:16px">
@@ -530,7 +549,7 @@ function vProduct(id){
       <div class="scroll" style="max-height:300px"><table><thead><tr>
       <th>${esc(T_.th_per)}</th><th>${esc(T_.th_title)}</th><th>${esc(T_.th_file)}</th></tr></thead><tbody>
       ${p.recent.map(r=>`<tr><td>${esc(plabel(r.period))}</td><td>${esc(r.title)}</td>
-        <td class="mono">${esc(r.file)}</td></tr>`).join("")}</tbody></table></div></div>
+        <td class="mono">${srcLink(r)}</td></tr>`).join("")}</tbody></table></div></div>
   </div>`;
 }
 
@@ -691,6 +710,11 @@ function drawProduct(p){
     const rows=p.breakdown.slice(0,14).map(b=>({label:bname(b).slice(0,46),value:b.value}));
     if(rows.length)mkChart($("#c-break"),barOpt(rows));
   }
+  const pv=$("#prov");
+  if(pv){const T_=t(), tb=srcTables(sel);
+    pv.textContent=tb.length
+      ? `${T_.src_tbl} ${tb.length>1?T_.src_many:T_.src_one} ${tb.join(", ")} — ${T_.src_hint}`
+      : "";}
   const box=$("#pick");
   if(box){box.innerHTML=seriesFor(p).map(s=>`<button class="chip ${picked.includes(s.id)?"on":""}"
       data-s="${esc(s.id)}">${esc(sname(s))}</button>`).join("");

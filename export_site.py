@@ -57,7 +57,9 @@ HEADLINES = [
      "note_en": "Consumer price index, annual change",
      "note_ar": "الرقم القياسي لأسعار المستهلك، التغير السنوي",
      "category": "121421", "table": "2.1", "row": "general index", "kind": "change",
-     "col_like": "percent change in%", "unit": "%", "scale": 1, "verified": "GASTAT: 1.8%"},
+     # The column used to be headed "Percent Change in August 2026"; the period
+     # now lives in the period field, so match what is left of the wording.
+     "col_like": "percent change%", "unit": "%", "scale": 1, "verified": "GASTAT: 1.8%"},
     {"id": "unemp_all", "en": "Unemployment rate", "ar": "معدل البطالة",
      "note_en": "All residents, Saudi and non-Saudi",
      "note_ar": "لجميع السكان، سعوديين وغير سعوديين",
@@ -162,7 +164,7 @@ def main() -> int:
         # of row numbers.
         cand = con.execute("""
             SELECT series_key, row_en, row_ar, col_en, col_ar, kind, index_base,
-                   n_points, first_period, last_period, period_type
+                   n_points, first_period, last_period, period_type, table_name
             FROM v_series_span
             WHERE category_id = ? AND n_points >= ? AND kind <> 'weight'
               -- a series that mixes index levels with percentage changes draws a
@@ -242,6 +244,9 @@ def main() -> int:
                 "row": tidy(r[1]), "row_ar": " ".join((r[2] or "").split()),
                 "col": tidy(r[3]), "col_ar": " ".join((r[4] or "").split()),
                 "kind": r[5], "base": r[6] or None, "freq": r[10],
+                # The workbook table the series was read from, so the site can
+                # tell a reader exactly which sheet to open to check it.
+                "table": r[11] or "",
                 "pts": [[p, round(v, 3)] for p, v in pts],
             })
 
@@ -255,7 +260,7 @@ def main() -> int:
         """, [cat, cat, MAX_BREAKDOWN]).fetchall()
 
         releases = con.execute("""
-            SELECT DISTINCT r.pub_id, r.title, r.source_file, r.max_period
+            SELECT DISTINCT r.pub_id, r.title, r.source_file, r.max_period, r.source_url
             FROM dim_release r WHERE r.category_id = ?
             ORDER BY r.max_period DESC LIMIT 12
         """, [cat]).fetchall()
@@ -277,7 +282,8 @@ def main() -> int:
                            "col": tidy(b[2]), "value": round(b[3], 3),
                            "weight": round(b[4], 3) if b[4] is not None else None}
                           for b in breakdown],
-            "recent": [{"pub": r[0], "title": r[1], "file": r[2], "period": r[3]}
+            "recent": [{"pub": r[0], "title": r[1], "file": r[2], "period": r[3],
+                        "url": r[4] or ""}
                        for r in releases],
         })
         log.info("  %-44s %2d series  %2d breakdown", name[:44], len(series), len(breakdown))
