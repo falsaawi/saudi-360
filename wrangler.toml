@@ -1,0 +1,15 @@
+# Cloudflare Pages project settings.
+#
+# Saudi 360 is a static site: the pipeline runs here and commits its output, so
+# Cloudflare has nothing to build. It serves what is in site/ as-is.
+#
+# Newer Wrangler reads pages_build_output_dir for a git-connected project. If
+# your dashboard does not pick it up, set the same values by hand:
+#
+#   Framework preset   None
+#   Build command      (leave empty)
+#   Build output dir   site
+#   Root directory     (leave empty)
+
+name = "saudi-360"
+pages_build_output_dir = "site"
