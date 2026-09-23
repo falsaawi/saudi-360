@@ -40,10 +40,21 @@ HEADLINE = re.compile(r"general index|total|الاجمالي|الرقم القي
 NOISE = re.compile(r"^\s*(s/?n|no\.?|code|رمز|م)\s*$", re.I)
 
 
+# A base note stranded in front of the name: "2023=100 Al Jouf". It is real
+# information -- it is what tells two bases of the same city apart -- so it is
+# moved to the end rather than dropped.
+BASE_PREFIX = re.compile(r"^\(?\s*((?:19|20)\d{2})\s*=\s*100\s*\)?\s*[:\-–]?\s*")
+
+
 def tidy(label: str) -> str:
     out = " ".join((label or "").split())
     if out.isupper() and len(out) > 3:
         out = out.title()
+    m = BASE_PREFIX.match(out)
+    if m:
+        rest = BASE_PREFIX.sub("", out).strip()
+        if rest:
+            out = f"{rest} ({m.group(1)}=100)"
     return out
 
 
@@ -185,13 +196,24 @@ def main() -> int:
 
         chosen, seen_rows = [], set()
 
+        # The most recent year any chartable series of this product reaches. A
+        # series a year or more behind it has been discontinued or superseded,
+        # whatever its label says.
+        current_year = max((int(r[9][:4]) for r in cand if r[9][:4].isdigit()), default=0)
+
         def score(r):
             """Rank candidates the way a reader would expect to meet them.
 
-            A national headline beats the same headline broken out by city, even
-            though the city series run longer: "General Index" for the country is
-            the number people come for, and it loses a plain length contest to
-            sixteen city series carrying the same row label.
+            Recency comes first. Consumer Prices carries the same "General
+            Index / Index Numbers" label on a 2018-based run of 56 points that
+            GASTAT stopped publishing in 2024 and on the live 2023-based run of
+            25. On length the dead one wins, and the page charted a headline
+            that stopped two years ago while the current figures sat unused.
+
+            After that, a national headline beats the same headline broken out
+            by city, even though the city series run longer: "General Index" for
+            the country is the number people come for, and it loses a plain
+            length contest to sixteen city series carrying the same row label.
             """
             row_label, col_label, kind = r[1] or "", r[3] or "", r[5]
             headline = bool(HEADLINE.search(f"{row_label} {col_label}"))
@@ -207,7 +229,11 @@ def main() -> int:
                 tier = 2
             else:
                 tier = 3
-            return (tier, -r[7])
+            # A year of slack, so an annual series is not called stale merely
+            # for being annual while a monthly one has moved on.
+            year = int(r[9][:4]) if r[9][:4].isdigit() else 0
+            stale = 0 if year >= current_year - 1 else 1
+            return (stale, tier, -r[7])
         def labels_of(r):
             """The pair a reader would see, or None when there is nothing to show.
 
@@ -224,33 +250,48 @@ def main() -> int:
             return row_label, col_label
 
         ranked = sorted(cand, key=score)
+
+        # One line per identity, where the base is part of the identity: a
+        # rebased index keeps its label, so matching on the label alone let one
+        # base hide the other and threw away either the history or the current
+        # figures. Both are real, and the chart draws them as two lines that
+        # are never joined.
+        #
+        # Within an identity take the longest run, and only then rank the
+        # identities against each other by recency. Choosing the whole pool on
+        # recency first would drop a discontinued base's full history in favour
+        # of a shorter, slightly fresher copy of the same dead series.
+        groups: dict[tuple, tuple] = {}
         for r in ranked:
             pair = labels_of(r)
             if pair is None:
                 continue
-            ident = (pair[0].lower(), pair[1].lower())
-            if ident in seen_rows:
-                continue
-            seen_rows.add(ident)
-            chosen.append(r)
-            if len(chosen) >= MAX_SERIES_PER_PRODUCT:
-                break
+            ident = (pair[0].lower(), pair[1].lower(), r[6] or "")
+            best = groups.get(ident)
+            if best is None or r[7] > best[7]:
+                groups[ident] = r
+        seen_rows.update(groups)
+        chosen = sorted(groups.values(), key=score)[:MAX_SERIES_PER_PRODUCT]
 
-        # A reader opens a product to see where it stands now. Ranking on length
-        # alone let a long historical run outrank the series carrying the newest
-        # readings and, sharing its label, crowd it out of the selection
-        # entirely: four products charted nothing past a period years before
-        # their latest release. Make room for one series that reaches the end.
-        if chosen:
-            newest = max(r[9] for r in cand)
-            if not any(r[9] == newest for r in chosen):
-                for r in ranked:
-                    if r[9] != newest or labels_of(r) is None:
-                        continue
-                    if len(chosen) >= MAX_SERIES_PER_PRODUCT:
-                        chosen.pop()
-                    chosen.append(r)
-                    break
+        # Two series earn a slot whatever their rank: the one reaching furthest
+        # forward, so the page shows where the product stands now, and the one
+        # reaching furthest back, so a rebase does not cost the reader the whole
+        # history behind it. Consumer Prices needs both -- its live 2023-based
+        # run is 25 points and the 2018-based run it replaced is 56, and the
+        # regional breakdowns would otherwise crowd out whichever came second.
+        pool = list(groups.values())
+
+        def ensure(pick):
+            if pick is None or any(c[0] == pick[0] for c in chosen):
+                return
+            if len(chosen) >= MAX_SERIES_PER_PRODUCT:
+                chosen.pop()
+            chosen.append(pick)
+
+        if pool:
+            newest = max(r[9] for r in pool)
+            ensure(min((r for r in pool if r[9] == newest), key=score))
+            ensure(max(pool, key=lambda r: r[7]))
 
         series = []
         for r in chosen:
@@ -275,6 +316,14 @@ def main() -> int:
                 "table": r[11] or "",
                 "pts": [[p, round(v, 3)] for p, v in pts],
             })
+
+        # When a product's charted series sit on more than one base, the base is
+        # part of what tells them apart: a rebased index keeps its label, so two
+        # lines would otherwise carry the same name with no way to tell the
+        # current run from the one it replaced.
+        multi_base = len({s["base"] or "" for s in series}) > 1
+        for s in series:
+            s["blab"] = f"{s['base']}=100" if (multi_base and s["base"]) else ""
 
         breakdown = con.execute("""
             WITH latest AS (SELECT max(period) AS p FROM v_observation WHERE category_id = ?)

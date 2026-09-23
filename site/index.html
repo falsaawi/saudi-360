@@ -326,7 +326,10 @@ function plabel(p){const m=/^(\d{4})(?:-(Q)?(\d{1,2}))?$/.exec(p||"");
   return MM[L][+m[3]]+" "+m[1];}
 const sname=s=>{const a=L==="ar"?(s.row_ar||s.row):(s.row||s.row_ar),
                 b=L==="ar"?(s.col_ar||s.col):(s.col||s.col_ar);
-  return [a,b].filter(Boolean).join(" · ")||"—";};
+  // blab is set only where a product charts more than one index base, and it
+  // is what distinguishes a rebased run from the one it replaced.
+  return [[a,b].filter(Boolean).join(" · ")||"—", s.blab?`(${s.blab})`:""]
+    .filter(Boolean).join(" ");};
 // The source file, linked back to GASTAT so a reader can open the workbook and
 // check the figure against the cell it was read from. Only a path on GASTAT's
 // own document server becomes a link; anything else stays plain text, so a
