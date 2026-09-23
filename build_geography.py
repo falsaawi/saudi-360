@@ -77,11 +77,12 @@ def norm(value: str) -> str:
 add("SA.RI", "region", "Riyadh Region", "Ar Riyad", "Ar Riyadh", "Al Riyadh", "Riyadh")
 add("SA.MK", "region", "Makkah", "Makkah Al Mukarramah", "Mecca", "Makkah Region")
 add("SA.MD", "region", "Al Madinah", "Al Madinah Al Munawwarah", "Madinah", "Medina Region")
-add("SA.QS", "region", "Al Qassim", "Qassim", "Al-Qassim", "Al Quassim", "Qasim")
+add("SA.QS", "region", "Al Qassim", "Qassim", "Al-Qassim", "Al Quassim", "Qasim",
+    "Al Qaseem", "Qaseem")
 add("SA.SH", "region", "Eastern Region", "Eastern Province", "Ash Sharqiyah", "Al Sharqiyah",
     "The Eastern Region")
 add("SA.AS", "region", "Asir", "Aseer", "`Asir", "Asir Region")
-add("SA.TB", "region", "Tabuk", "Tabuk Region")
+add("SA.TB", "region", "Tabuk", "Tabuk Region", "Tabouk")
 add("SA.HA", "region", "Hail", "Ha'il", "Hail Region", "Ha il")
 add("SA.HS", "region", "Northern Borders", "Al Hudud ash Shamaliyah", "Northern Border",
     "Northern Boarders")

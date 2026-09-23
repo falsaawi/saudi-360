@@ -159,6 +159,133 @@ def arabic_names() -> dict:
     return {p["category_id"]: p for p in tax.get("ar", [])}
 
 
+# The regional view. Each indicator names one exact table whose shape has been
+# read by eye and whose figures are asserted in check_against_source.py, rather
+# than being found by searching labels for a region's name: a search turns up
+# airports, dry ports and establishment counts that are located in a region but
+# do not measure it.
+#
+# "row" means the region sits in the row label and `col` picks the column;
+# "row_suffix" means the region and the measure share the row label, as Real
+# Estate writes "Riyadh Index" and "Riyadh YoY".
+# The region names a reader expects. build_geography's names come from the
+# TopoJSON boundary file, which transliterates ("Ar Riyad", "Ash Sharqiyah",
+# "`Asir"); those are right for joining geometry and wrong on a button.
+REGION_NAMES = {
+    "SA.RI": ("Riyadh", "الرياض"),
+    "SA.MK": ("Makkah", "مكة المكرمة"),
+    "SA.MD": ("Madinah", "المدينة المنورة"),
+    "SA.QS": ("Al Qassim", "القصيم"),
+    "SA.SH": ("Eastern Province", "المنطقة الشرقية"),
+    "SA.AS": ("Asir", "عسير"),
+    "SA.TB": ("Tabuk", "تبوك"),
+    "SA.HA": ("Hail", "حائل"),
+    "SA.HS": ("Northern Borders", "الحدود الشمالية"),
+    "SA.JZ": ("Jazan", "جازان"),
+    "SA.NJ": ("Najran", "نجران"),
+    "SA.BA": ("Al Bahah", "الباحة"),
+    "SA.JF": ("Al Jouf", "الجوف"),
+}
+
+# Which regions lead the picker. Riyadh first because it is the one most
+# readers open the page for; the rest follow by population weight, then the
+# remainder alphabetically.
+REGION_ORDER = ["SA.RI", "SA.MK", "SA.SH", "SA.MD", "SA.QS", "SA.AS"]
+
+REGION_INDICATORS = [
+    {"id": "cpi", "en": "Consumer prices", "ar": "الأرقام القياسية لأسعار المستهلك",
+     "note_en": "Index, 2023 = 100", "note_ar": "الرقم القياسي، 2023 = 100",
+     "category": "121421", "table": "4.1", "mode": "row", "col": "", "unit": "", "dp": 2},
+    {"id": "inflation", "en": "Inflation", "ar": "التضخم",
+     "note_en": "Consumer prices, annual change", "note_ar": "أسعار المستهلك، التغير السنوي",
+     "category": "121421", "table": "4.2", "mode": "row", "col": "", "unit": "%", "dp": 2,
+     "signed": True},
+    {"id": "repi", "en": "Real estate prices", "ar": "أسعار العقارات",
+     "note_en": "Index, 2023 = 100", "note_ar": "الرقم القياسي، 2023 = 100",
+     "category": "121920", "table": "3", "mode": "row_suffix", "suffix": "Index",
+     "unit": "", "dp": 2},
+    {"id": "repi_yoy", "en": "Real estate, annual change", "ar": "العقارات، التغير السنوي",
+     "note_en": "Price index, year on year", "note_ar": "الرقم القياسي، سنويًا",
+     "category": "121920", "table": "3", "mode": "row_suffix", "suffix": "YoY",
+     "unit": "%", "dp": 1, "signed": True},
+    {"id": "unemp", "en": "Unemployment rate", "ar": "معدل البطالة",
+     "note_en": "All residents, Saudi and non-Saudi", "note_ar": "لجميع السكان",
+     "category": "417515", "table": "2-4", "mode": "row", "col": "total", "unit": "%", "dp": 2},
+    {"id": "unemp_saudi", "en": "Saudi unemployment", "ar": "بطالة السعوديين",
+     "note_en": "Saudi nationals only", "note_ar": "السعوديون فقط",
+     "category": "417515", "table": "2-4", "mode": "row", "col": "saudi total",
+     "unit": "%", "dp": 2},
+]
+
+
+def build_regions(con) -> list[dict]:
+    """One card set per administrative region, plus its own history to chart."""
+    from build_geography import REGIONS, resolve
+
+    out = {code: {"code": code,
+                  "en": REGION_NAMES.get(code, (en, ar))[0],
+                  "ar": REGION_NAMES.get(code, (en, ar))[1],
+                  "ind": {}, "series": {}}
+           for code, (en, ar) in REGIONS.items()}
+
+    for spec in REGION_INDICATORS:
+        where = ["category_id = ?", "trim(table_name) = ?"]
+        args: list = [spec["category"], spec["table"]]
+        if spec["mode"] == "row":
+            where.append("lower(trim(col_en)) = ?")
+            args.append(spec["col"])
+        rows = con.execute(f"""
+            SELECT trim(row_en) AS label, period, value
+            FROM v_observation
+            WHERE {' AND '.join(where)} AND value IS NOT NULL
+            ORDER BY period
+        """, args).fetchall()
+
+        by_region: dict[str, list] = {}
+        for label, period, value in rows:
+            name = tidy(label)
+            if spec["mode"] == "row_suffix":
+                if not name.endswith(" " + spec["suffix"]):
+                    continue
+                name = name[: -(len(spec["suffix"]) + 1)]
+            hit = resolve(name)
+            if not hit:
+                continue
+            by_region.setdefault(hit[0], []).append((period, value))
+
+        for code, pts in by_region.items():
+            if code not in out:
+                continue
+            pts.sort()
+            # One reading per period: the same region can appear twice in a
+            # sheet, and a card must not silently show whichever came last.
+            dedup = {p: v for p, v in pts}
+            last = max(dedup)
+            out[code]["ind"][spec["id"]] = {
+                "en": spec["en"], "ar": spec["ar"],
+                "note_en": spec["note_en"], "note_ar": spec["note_ar"],
+                "value": round(dedup[last], spec["dp"]), "unit": spec["unit"],
+                # a rate is not a change: only a change gets a leading sign
+                "signed": bool(spec.get("signed")),
+                "period": last, "table": spec["table"],
+            }
+            if len(dedup) >= MIN_POINTS:
+                out[code]["series"][spec["id"]] = [
+                    [p, round(v, spec["dp"])] for p, v in sorted(dedup.items())][-60:]
+
+    regions = [r for r in out.values() if r["ind"]]
+    rank = {c: i for i, c in enumerate(REGION_ORDER)}
+    regions.sort(key=lambda r: (rank.get(r["code"], len(rank)), r["en"]))
+    log.info("regions: %d with indicators, %d indicator specs",
+             len(regions), len(REGION_INDICATORS))
+    for spec in REGION_INDICATORS:
+        have = sum(1 for r in regions if spec["id"] in r["ind"])
+        if have < len(regions):
+            log.warning("  %-12s resolved for only %d of %d regions",
+                        spec["id"], have, len(regions))
+    return regions
+
+
 def main() -> int:
     con = duckdb.connect(str(DB), read_only=True)
     ar = arabic_names()
@@ -404,6 +531,9 @@ def main() -> int:
                (SELECT COUNT(*) FROM dim_release),
                (SELECT COUNT(*) FROM fact_revision)
     """).fetchone()
+    app["regions"] = build_regions(con)
+    app["region_order"] = [s["id"] for s in REGION_INDICATORS]
+
     app["totals"] = {"observations": totals[0], "series": totals[1],
                      "releases": totals[2], "revisions": totals[3],
                      "products": len(app["products"]), "excluded": suspects}

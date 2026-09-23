@@ -187,9 +187,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <script>
 const T={
- en:{dir:"ltr",nav_home:"Overview",nav_cat:"Catalogue",nav_exp:"Compare",nav_map:"Map",nav_lens:"Vision 2030",nav_data:"Query",dark:"Dark",light:"Light",
-  h_map:"Regional map",
-  p_map:"312 measures that cover at least 8 of the 13 administrative regions. GASTAT reports some products by city and others by region; cities are rolled up to the region that contains them.",
+ en:{dir:"ltr",nav_home:"Overview",nav_cat:"Catalogue",nav_exp:"Compare",nav_map:"Regions",nav_lens:"Vision 2030",nav_data:"Query",dark:"Dark",light:"Light",
+  h_map:"Regions",
+  p_map:"Pick a region to see where it stands. Each figure is read from one named GASTAT table and checked against the published workbook, so it can be traced back cell by cell.",
+  reg_trend:"History",reg_rank:"All regions",reg_region:"Region",
+  reg_short:"Too few readings to draw a line for this indicator.",
+  reg_none:"No regional indicators in this build.",
+  reg_note:"Prices and real estate are index numbers on 2023 = 100, so they compare a region with its own past, not with another region's price level. Unemployment is a rate and is comparable across regions.",
   m_prod:"Product",m_metric:"Measure",m_period:"Period",m_rank:"Regions ranked",
   m_cov:"of all observations carry a place this map can resolve",
   h_lens:"Vision 2030 lens",
@@ -235,9 +239,13 @@ const T={
   pick:"Select series",clear:"Clear",
   attr:"Source: General Authority for Statistics (GASTAT), Kingdom of Saudi Arabia. Reproduced under clause 1.2.2 of GASTAT's Use Policy, which permits reuse provided GASTAT is credited and modifications are indicated.",
   attr2:"Not an official GASTAT publication and not endorsed by GASTAT. Index values are as published; any re-basing or growth rate shown here is derived and computed only within a single index base."},
- ar:{dir:"rtl",nav_home:"نظرة عامة",nav_cat:"الدليل",nav_exp:"المقارنة",nav_map:"الخريطة",nav_lens:"رؤية 2030",nav_data:"استعلام",dark:"داكن",light:"فاتح",
-  h_map:"الخريطة الإقليمية",
-  p_map:"٣١٢ مقياسًا تغطي ٨ مناطق إدارية على الأقل من أصل ١٣. تنشر الهيئة بعض المنتجات حسب المدينة وأخرى حسب المنطقة؛ وتُجمَّع المدن ضمن المنطقة التي تقع فيها.",
+ ar:{dir:"rtl",nav_home:"نظرة عامة",nav_cat:"الدليل",nav_exp:"المقارنة",nav_map:"المناطق",nav_lens:"رؤية 2030",nav_data:"استعلام",dark:"داكن",light:"فاتح",
+  h_map:"المناطق",
+  p_map:"اختر منطقة لعرض مؤشراتها. كل رقم مقروء من جدول محدد لدى الهيئة ومطابق للملف المنشور، بحيث يمكن تتبعه خلية بخلية.",
+  reg_trend:"السلسلة الزمنية",reg_rank:"كل المناطق",reg_region:"المنطقة",
+  reg_short:"القراءات أقل من أن تُرسم كخط لهذا المؤشر.",
+  reg_none:"لا توجد مؤشرات إقليمية في هذه النسخة.",
+  reg_note:"أرقام الأسعار والعقارات قياسية على أساس 2023 = 100، فهي تقارن المنطقة بماضيها لا بمستوى أسعار منطقة أخرى. أما البطالة فهي معدل قابل للمقارنة بين المناطق.",
   m_prod:"المنتج",m_metric:"المقياس",m_period:"الفترة",m_rank:"ترتيب المناطق",
   m_cov:"من إجمالي المشاهدات تحمل مكانًا يمكن للخريطة تحديده",
   h_lens:"منظور رؤية 2030",
@@ -622,35 +630,100 @@ function vExplore(){
 }
 
 
+// The regions view. The region picker sits at the top and the indicators for
+// whichever region is selected sit directly under it, so the figures are the
+// first thing read rather than something to hunt for on a choropleth. Every
+// figure here comes from a table whose shape was read by hand and whose values
+// are asserted against the source workbooks.
+let regSel = {code:"", ind:""};
+
+const rname = r => (L==="ar" && r.ar) ? r.ar : r.en;
+
+function regionRank(id){
+  // Every region that reports this indicator, best-known value first.
+  return (D.regions||[]).filter(r=>r.ind[id])
+    .map(r=>({code:r.code, name:rname(r), v:r.ind[id].value, unit:r.ind[id].unit, signed:r.ind[id].signed}))
+    .sort((a,b)=>b.v-a.v);
+}
+
 function vMap(){
-  const T_=t();
-  if(!G)return `<h1 class="page">${esc(T_.h_map)}</h1><p class="lede">${esc(T_.p_map)}</p>
-    <div class="card"><p class="muted" style="margin:0">…</p></div>`;
-  const prods=[...new Map(G.metrics.map(m=>[m.product_id,m])).values()];
-  if(!mapSel.prod)mapSel.prod=prods[0].product_id;
-  const mine=G.metrics.filter(m=>m.product_id===mapSel.prod);
-  if(!mine.some(m=>m.id===mapSel.metric))mapSel.metric=mine[0].id;
-  const cur=G.metrics.find(m=>m.id===mapSel.metric);
-  if(!cur.periods.includes(mapSel.period))mapSel.period=cur.periods[cur.periods.length-1];
-  const pct=(G.mapped_obs/G.total_obs*100).toFixed(1);
-  return `<h1 class="page">${esc(T_.h_map)}</h1><p class="lede">${esc(T_.p_map)}</p>
-  <div class="card" style="margin-bottom:16px">
-    <div class="row" style="margin-bottom:12px">
-      <label class="muted">${esc(T_.m_prod)}</label>
-      <select id="mp">${prods.map(m=>`<option value="${esc(m.product_id)}" ${m.product_id===mapSel.prod?"selected":""}>${esc(prodName(m.product_id))}</option>`).join("")}</select>
-      <label class="muted">${esc(T_.m_metric)}</label>
-      <select id="mm" style="max-width:320px">${mine.map(m=>`<option value="${m.id}" ${m.id===mapSel.metric?"selected":""}>${esc(metricName(m))}</option>`).join("")}</select>
-      <label class="muted">${esc(T_.m_period)}</label>
-      ${cur.periods.length<=6
-        ? `<div class="srow" id="mperp" style="min-width:230px">${cur.periods.map(x=>`<button data-p="${esc(x)}" class="${x===mapSel.period?"on":""}">${esc(plabel(x))}</button>`).join("")}</div>`
-        : `<select id="mper">${cur.periods.map(x=>`<option value="${esc(x)}" ${x===mapSel.period?"selected":""}>${esc(plabel(x))}</option>`).join("")}</select>`}
+  const T_=t(), regs=D.regions||[];
+  if(!regs.length)return `<h1 class="page">${esc(T_.h_map)}</h1>
+    <div class="warnbox">${esc(T_.reg_none)}</div>`;
+  if(!regs.some(r=>r.code===regSel.code))regSel.code=regs[0].code;
+  const cur=regs.find(r=>r.code===regSel.code);
+  const order=(D.region_order||[]).filter(id=>cur.ind[id]);
+  if(!order.includes(regSel.ind))regSel.ind=order[0];
+  const chart=cur.series[regSel.ind];
+
+  return `<h1 class="page">${esc(T_.h_map)}</h1>
+  <p class="lede">${esc(T_.p_map)}</p>
+
+  <div class="picker" style="margin-bottom:16px"><div class="chips" id="regpick">
+    ${regs.map(r=>`<button class="chip ${r.code===regSel.code?"on":""}" data-r="${esc(r.code)}">${esc(rname(r))}</button>`).join("")}
+  </div></div>
+
+  <h2 style="margin:0 0 10px">${esc(rname(cur))}</h2>
+  <div class="kpis2" style="margin-bottom:16px">
+    ${order.map(id=>{const i=cur.ind[id];
+      const neg=i.signed&&i.value<0;
+      return `<div class="kpi2">
+        <span class="n ${neg?"dn":"up"}">${esc(fmtNum(i.value,i.unit,i.signed))}</span>
+        <div class="t">${esc(L==="ar"?i.ar:i.en)}</div>
+        <div class="s">${esc(L==="ar"?i.note_ar:i.note_en)}</div>
+        <div class="p">${esc(plabel(i.period))} · ${esc(T_.src_tbl)} ${esc(T_.src_one)} ${esc(i.table)}</div>
+      </div>`}).join("")}
+  </div>
+
+  <div class="grid g2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px">
+        <h2 style="margin:0">${esc(T_.reg_trend)}</h2>
+        <div class="srow" id="regind" style="min-width:250px">
+          ${order.map(id=>`<button data-i="${esc(id)}" class="${id===regSel.ind?"on":""}">${esc(L==="ar"?cur.ind[id].ar:cur.ind[id].en)}</button>`).join("")}
+        </div>
+      </div>
+      ${chart?`<div class="chart" id="c-regtrend"></div>`
+             :`<p class="muted">${esc(T_.reg_short)}</p>`}
     </div>
-    <div class="grid g2">
-      <div class="chart" id="c-map" style="height:400px"></div>
-      <div class="scroll" style="max-height:400px"><table id="t-map"></table></div>
+    <div class="card pad0">
+      <div style="padding:16px 18px 0"><h2>${esc(T_.reg_rank)}</h2>
+        <p class="muted" style="margin:4px 0 0">${esc(L==="ar"?cur.ind[regSel.ind].ar:cur.ind[regSel.ind].en)} — ${esc(plabel(cur.ind[regSel.ind].period))}</p></div>
+      <div class="scroll" style="max-height:330px"><table><thead><tr>
+        <th>${esc(T_.reg_region)}</th><th style="text-align:end">${esc(T_.th_val)}</th></tr></thead><tbody>
+        ${regionRank(regSel.ind).map(x=>`<tr${x.code===regSel.code?' style="font-weight:600"':''}>
+          <td><a href="#" data-goto="${esc(x.code)}">${esc(x.name)}</a></td>
+          <td style="text-align:end" class="mono">${esc(fmtNum(x.v,x.unit,x.signed))}</td></tr>`).join("")}
+      </tbody></table></div>
     </div>
-    <p class="muted" style="margin:12px 0 0">${num(G.mapped_obs)} (${pct}%) ${esc(T_.m_cov)}. ${esc(T_.th_prod)}: <a href="#/product/${esc(cur.product_id)}">${esc(prodName(cur.product_id))}</a>.</p>
-  </div>`;
+  </div>
+  <p class="muted" style="margin:12px 0 0">${esc(T_.reg_note)}</p>`;
+}
+
+// A leading + belongs on a change, not on a level. An unemployment rate of
+// 2.83% is not "+2.83%": it has not gone up by anything.
+function fmtNum(v,unit,signed){
+  const s=(signed&&v>0?"+":"")+v.toLocaleString(L==="ar"?"ar-SA":"en-US",
+    {minimumFractionDigits:0,maximumFractionDigits:2});
+  return s+(unit||"");
+}
+
+function drawRegions(){
+  const regs=D.regions||[]; const cur=regs.find(r=>r.code===regSel.code);
+  if(cur&&cur.series[regSel.ind]&&$("#c-regtrend")){
+    const pts=cur.series[regSel.ind];
+    mkChart($("#c-regtrend"),lineOpt(
+      [{name:rname(cur)+" · "+(L==="ar"?cur.ind[regSel.ind].ar:cur.ind[regSel.ind].en),
+        data:pts.map(p=>p[1])}], pts.map(p=>plabel(p[0])), {area:true, legend:false}));
+  }
+  const rp=$("#regpick");
+  if(rp)rp.onclick=e=>{const b=e.target.closest("[data-r]"); if(!b)return;
+    regSel.code=b.dataset.r; disposeCharts(); render();};
+  const ri=$("#regind");
+  if(ri)ri.onclick=e=>{const b=e.target.closest("[data-i]"); if(!b)return;
+    regSel.ind=b.dataset.i; disposeCharts(); render();};
+  document.querySelectorAll("[data-goto]").forEach(a=>a.onclick=e=>{
+    e.preventDefault(); regSel.code=a.dataset.goto; disposeCharts(); render();});
 }
 
 function vLens(){
@@ -677,44 +750,9 @@ function prodName(id){const p=D.products.find(x=>x.id===id);return p?pname(p):id
 function metricName(m){return (L==="ar"&&m.metric_ar)?m.metric_ar:m.metric;}
 function regName(id){const r=G.regions.find(x=>x.id===id);return r?(L==="ar"?r.ar:r.en):id;}
 
-function drawMap(){
-  if(!G||!geoJson||!$("#c-map"))return;
-  const cur=G.metrics.find(m=>m.id===mapSel.metric);
-  const vals=(G.values[mapSel.metric]||{})[mapSel.period]||{};
-  const entries=G.regions.filter(r=>vals[r.id]!=null).map(r=>({name:r.id,value:vals[r.id]}));
-  const missing=G.regions.filter(r=>vals[r.id]==null);
-  const nums=entries.map(e=>e.value);
-  const a=axis();
-  const lo=Math.min(...nums), hi=Math.max(...nums);
-  mkChart($("#c-map"),{backgroundColor:"transparent",animation:false,
-    tooltip:{trigger:"item",backgroundColor:a.card,borderColor:a.line,
-      textStyle:{color:cvar("--ink"),fontSize:12},
-      formatter:pt=>`${esc(regName(pt.name))}<br><b>${pt.value==null?"—":num(pt.value,2)}</b>`},
-    visualMap:{min:lo,max:hi,left:"left",bottom:14,calculable:true,
-      textStyle:{color:a.muted,fontSize:11},
-      inRange:{color:["#e1f5ee","#9fe1cb","#5dcaa5","#1d9e75","#0f6e56"]},
-      // A region GASTAT did not report is left neutral, not shaded as if it
-      // held a value at the bottom of the scale.
-      outOfRange:{color:cvar("--soft")}},
-    series:[{type:"map",map:"sau",roam:false,nameProperty:"name",
-      itemStyle:{borderColor:a.line,borderWidth:.6,areaColor:cvar("--soft")},
-      emphasis:{label:{show:false},itemStyle:{borderColor:cvar("--acc"),borderWidth:1.6}},
-      select:{disabled:true},
-      data:entries}]});
-  const ranked=entries.slice().sort((x,y)=>y.value-x.value);
-  const T_=t();
-  $("#t-map").innerHTML=`<thead><tr><th>${esc(T_.th_reg)}</th><th class="n">${esc(T_.th_val)}</th></tr></thead><tbody>`+
-    ranked.map(e=>`<tr><td>${esc(regName(e.name))}</td><td class="n">${num(e.value,2)}</td></tr>`).join("")+
-    missing.map(r=>`<tr><td class="muted">${esc(regName(r.id))}</td><td class="n muted">${esc(t().nodata)}</td></tr>`).join("")+
-    `</tbody>`;
-  const mp=$("#mp"), mm=$("#mm"), mper=$("#mper");
-  if(mp)mp.onchange=e=>{mapSel.prod=e.target.value;mapSel.metric=null;render();};
-  if(mm)mm.onchange=e=>{mapSel.metric=e.target.value;mapSel.period=null;render();};
-  if(mper)mper.onchange=e=>{mapSel.period=e.target.value;disposeCharts();drawMap();};
-  const mpp=$("#mperp");
-  if(mpp)mpp.onclick=e=>{const b=e.target.closest("[data-p]"); if(!b)return;
-    mapSel.period=b.dataset.p; render();};
-}
+// The choropleth this view used to be was replaced by the region picker
+// above: the figures are what a reader comes for, and a map made them
+// something to hover for. loadGeo() stays -- the Vision 2030 view uses it.
 
 /* ---------- chart wiring ---------- */
 let rebase=false;
@@ -934,11 +972,9 @@ function render(){
   else if(h==="/catalogue"){v.innerHTML=vCatalogue();}
   else if(h==="/explore"){v.innerHTML=vExplore(); drawExplore();}
   else if(h==="/data"){v.innerHTML=vData(); wireData();}
-  else if(h==="/map"){v.innerHTML=vMap();
-    if(!G){loadGeo().then(ok=>{ if(ok&&(location.hash||"#/").slice(1)==="/map"){
-      v.innerHTML=vMap(); drawMap(); } else if(!ok){
-      v.innerHTML='<div class="warnbox"><b>Could not load the map data.</b></div>'; }});}
-    else drawMap();}
+  // The regions view reads app.json, which is already loaded, so unlike the
+  // choropleth it needs no second fetch before it can render.
+  else if(h==="/map"){v.innerHTML=vMap(); drawRegions();}
   else if(h==="/lens"){
     if(!G){loadGeo().then(()=>{ if((location.hash||"#/").slice(1)==="/lens") v.innerHTML=vLens(); });}
     v.innerHTML=vLens();}
