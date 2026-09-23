@@ -13,25 +13,34 @@ Everything the site needs is committed:
 | `site/data/*.parquet` | 29 MB | the full warehouse, for the Query page |
 | `site/_headers` | 1 KB | cache and range-request headers |
 
-## One-time setup
+## Live site
 
-Connecting a repository is an account action, so it happens in your dashboard,
-not from here. No token is ever pasted into a chat.
+**https://saudi-360-3e7.pages.dev**
 
-1. Go to **Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git**.
-2. Authorise GitHub and pick **falsaawi/saudi-360**.
-3. Settings:
-   - Production branch: `main`
-   - Framework preset: **None**
-   - Build command: **leave empty**
-   - Build output directory: **`site`**
-4. **Save and Deploy.**
+Deployed with Wrangler from this directory. Authentication is a browser OAuth
+grant (`npx wrangler login`) stored in your own Wrangler config — no API token
+is ever pasted into a chat or committed.
 
-The first deploy takes a minute or two. After that every `git push` to `main`
-redeploys automatically.
+### Deploying an update
 
-You will get `https://saudi-360.pages.dev`. To use your own domain, add it under
-the project's **Custom domains** tab.
+```bash
+npx wrangler pages deploy site --project-name saudi-360 --branch main
+```
+
+Note for whoever runs this next: current Wrangler delegates `pages` commands to
+the newer Workers-based Pages and misreads this repository's `wrangler.toml` as
+a Worker config. The project was created once with `--force` to pin it to
+classic Pages; now that it exists, plain `wrangler pages deploy` works and
+`--force` should not be passed again.
+
+### Connecting it to GitHub instead
+
+To have Cloudflare redeploy on every push rather than deploying by hand, attach
+the repository in **Workers & Pages → saudi-360 → Settings → Builds → Connect to
+Git**, with framework preset **None**, an empty build command and build output
+directory **`site`**.
+
+For your own domain, use the project's **Custom domains** tab.
 
 ## Refreshing the data
 
@@ -57,17 +66,38 @@ ago. Both of those have caught real faults that every other test passed.
 
 Then commit and push; Cloudflare redeploys on its own.
 
-## Why the Parquet ships from Pages rather than R2
+## The Parquet ships from Pages, at a cost
 
-The Query page reads the warehouse with HTTP range requests, which R2 was meant
-to serve. At 29 MB the whole set fits in Pages, whose per-file limit is 25 MiB
-against a largest file of 17 MB. That removes a bucket, a public bucket URL and
-a CORS policy for no loss of function.
+The whole set is 29 MB and Pages' per-file limit is 25 MiB against a largest
+file of 17 MB, so it fits. That removes a bucket, a public bucket URL and a
+CORS policy.
 
-Each refresh adds roughly 29 MB to the repository's history. If that becomes
-awkward, upload `dist/r2/` to an R2 bucket, stop committing `site/data/`, and
-point the page at the bucket by setting `window.SAUDI360_DATA_BASE` in
-`site/index.html` to the bucket's public URL. Nothing else changes.
+**It also costs something, and the cost was measured rather than assumed.**
+DuckDB-WASM asks for byte ranges so that a query reads only the row groups it
+touches. Pages answers a ranged request for these files with `200` and the whole
+file — verified against the deployed site, with and without an `Accept-Ranges`
+header of our own, on both a 17 MB file and a 5 KB one. So the first use of the
+Query page downloads the set entire. It then works normally: a CPI query over
+1.2 million rows returns in about 400 ms.
+
+Repeat visits revalidate and get a `304` while the warehouse is unchanged, so
+the download is once per rebuild, not once per visit.
+
+**R2 does serve partial content.** Moving the files there is what makes the page
+fetch only the bytes a query touches, and it is the right change if the Query
+page gets real use or if mobile visitors matter. It needs an R2 write scope,
+which the Wrangler OAuth grant used for this deploy does not include:
+
+1. Create a bucket in the dashboard and make it public.
+2. Upload `dist/r2/*` to it.
+3. Stop committing `site/data/` (restore the ignore rule).
+4. Set `window.SAUDI360_DATA_BASE` in `site/index.html` to the bucket's public
+   URL, and allow this origin in the bucket's CORS policy.
+
+Nothing else changes; the page already resolves that base into absolute URLs.
+
+Each refresh also adds roughly 29 MB to the repository's history, which is the
+other reason to move to R2 eventually.
 
 ## Attribution
 

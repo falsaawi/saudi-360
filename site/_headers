@@ -23,10 +23,19 @@
 /geo/*
   Cache-Control: public, max-age=31536000, immutable
 
-# The Parquet the Query page reads. DuckDB-WASM fetches these with HTTP range
-# requests, so the CDN must serve partial content rather than collapse a range
-# request into the whole file. They are rebuilt with the warehouse, so they
-# revalidate rather than being cached hard.
+# The Parquet the Query page reads.
+#
+# DuckDB-WASM asks for byte ranges, but Pages answers a ranged request for these
+# with 200 and the whole file -- measured against the deployed site, not assumed.
+# So the first use of the Query page downloads the set entire (~28 MB) and
+# DuckDB works from that. Advertising Accept-Ranges here claimed a capability the
+# server does not provide, which is worse than not claiming it.
+#
+# must-revalidate rather than a long max-age: the files are rebuilt whenever the
+# warehouse is, and a revalidation that finds them unchanged costs one 304.
+# Serving a stale warehouse would be the worse failure.
+#
+# Moving these to R2, which does serve partial content, is what makes the page
+# fetch only the bytes a query touches. See DEPLOY.md.
 /data/*
   Cache-Control: public, max-age=0, must-revalidate
-  Accept-Ranges: bytes

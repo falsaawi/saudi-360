@@ -39,3 +39,7 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# Wrangler, installed locally for deploys. Not part of the pipeline.
+node_modules/
+package-lock.json
