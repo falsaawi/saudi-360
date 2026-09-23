@@ -25,9 +25,15 @@ recon/*.html
 recon/inventory*.json
 recon/releases.json
 
-# Parquet staging for R2, and the local copy used to test the query page
+# Staging copy of the Parquet, rebuilt by build_parquet.py
 dist/
-site/data/
+
+# site/data/ is NOT ignored: the Query page reads the Parquet over HTTP range
+# requests, and at 29 MB the whole set ships from Pages itself. That keeps the
+# deployment to one service -- no bucket, no public bucket URL and no CORS --
+# and Cloudflare's 25 MiB per-file limit has room to spare over the largest
+# file at 17 MB. If the repository gets heavy, these move to R2 and the page
+# is pointed at it by setting SAUDI360_DATA_BASE.
 
 __pycache__/
 *.pyc

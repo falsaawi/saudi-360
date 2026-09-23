@@ -22,3 +22,11 @@
 # Administrative boundaries are fixed; cache them for a year.
 /geo/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The Parquet the Query page reads. DuckDB-WASM fetches these with HTTP range
+# requests, so the CDN must serve partial content rather than collapse a range
+# request into the whole file. They are rebuilt with the warehouse, so they
+# revalidate rather than being cached hard.
+/data/*
+  Cache-Control: public, max-age=0, must-revalidate
+  Accept-Ranges: bytes
