@@ -225,6 +225,8 @@ const T={
   th_title:"Release",
   src_tbl:"Read from",src_one:"table",src_many:"tables",
   src_hint:"Open the GASTAT workbook and compare the figures yourself.",
+  lag1:"The longest run GASTAT publishes for this product ends",
+  lag2:"Later releases report a single period at a time, so they appear in the breakdown below rather than as a line.",
   none:"No time series in this product — GASTAT publishes it as a single-period table, so it is shown as a breakdown instead.",
   rebase:"This product's index was rebased during the period shown. Series on different bases are kept separate and never joined.",
   idx100:"Re-base to 100",raw:"Raw values",csv:"Download CSV",csv_fail:"Save unavailable",
@@ -271,6 +273,8 @@ const T={
   th_title:"الإصدار",
   src_tbl:"مقروءة من",src_one:"جدول",src_many:"جداول",
   src_hint:"افتح ملف الهيئة وقارن الأرقام بنفسك.",
+  lag1:"أطول سلسلة تنشرها الهيئة لهذا المنتج تنتهي عند",
+  lag2:"الإصدارات الأحدث تعرض فترة واحدة في كل مرة، لذا تظهر في التوزيع أدناه لا كخط زمني.",
   none:"لا توجد سلاسل زمنية لهذا المنتج — تنشره الهيئة كجدول لفترة واحدة، لذا يُعرض كتوزيع.",
   rebase:"أُعيد تحديد سنة الأساس لهذا المؤشر خلال الفترة المعروضة. تُفصل السلاسل ذات الأساس المختلف ولا تُوصل.",
   idx100:"إعادة الأساس إلى ١٠٠",raw:"القيم الأصلية",csv:"تنزيل CSV",csv_fail:"التنزيل غير متاح",
@@ -335,6 +339,16 @@ function srcLink(r){
 }
 // The workbook tables a set of plotted series was read from.
 const srcTables=ss=>[...new Set(ss.map(s=>(s.table||"").trim()).filter(Boolean))].sort();
+// Where the charts stop, when that is short of the product's own coverage.
+// Compared by year on purpose: "2026-03" and "2026-Q1" are the same quarter
+// written two ways, and comparing the strings whole reports a gap that is not
+// there. A shortfall worth warning about is a matter of years, not months.
+function chartLag(p){
+  if(!p.series||!p.series.length)return null;
+  const last=p.series.reduce((m,s)=>{const e=s.pts[s.pts.length-1][0];return e>m?e:m;},"");
+  if(!last||!p.last)return null;
+  return last.slice(0,4)<p.last.slice(0,4)?last:null;
+}
 // Arabic names exist for 16 of 20 products; the four archived series are not in
 // GASTAT's live Arabic taxonomy, so they keep their English name rather than a
 // machine translation of an official statistical title.
@@ -524,6 +538,7 @@ function vProduct(id){
     <div class="card kpi"><div class="lab">${esc(T_.th_rel)}</div><div class="val">${num(p.releases)}</div></div>
   </div>
   ${multiBase?`<div class="warnbox"><b>${esc(p.bases.join(" → "))}</b> — ${esc(T_.rebase)}</div>`:""}
+  ${chartLag(p)?`<div class="warnbox">${esc(T_.lag1)} <b>${esc(plabel(chartLag(p)))}</b>. ${esc(T_.lag2)}</div>`:""}
   ${p.series.length?`
   <div class="card" style="margin-bottom:16px">
     <div class="row" style="justify-content:space-between;margin-bottom:10px">

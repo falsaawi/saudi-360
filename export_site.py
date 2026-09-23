@@ -208,23 +208,49 @@ def main() -> int:
             else:
                 tier = 3
             return (tier, -r[7])
-        for r in sorted(cand, key=score):
-            # Some tables label rows in Arabic only. Requiring an English label
-            # threw those series away entirely -- for two products, all of them.
-            # The Arabic label is the label; the site falls back to it.
+        def labels_of(r):
+            """The pair a reader would see, or None when there is nothing to show.
+
+            Some tables label rows in Arabic only. Requiring an English label
+            threw those series away entirely -- for two products, all of them.
+            The Arabic label is the label; the site falls back to it.
+            """
             row_label = tidy(r[1]) or tidy(r[2])
             col_label = tidy(r[3]) or tidy(r[4])
             if NOISE.match(row_label) or NOISE.match(col_label):
-                continue
+                return None
             if not row_label and not col_label:
+                return None
+            return row_label, col_label
+
+        ranked = sorted(cand, key=score)
+        for r in ranked:
+            pair = labels_of(r)
+            if pair is None:
                 continue
-            ident = (row_label.lower(), col_label.lower())
+            ident = (pair[0].lower(), pair[1].lower())
             if ident in seen_rows:
                 continue
             seen_rows.add(ident)
             chosen.append(r)
             if len(chosen) >= MAX_SERIES_PER_PRODUCT:
                 break
+
+        # A reader opens a product to see where it stands now. Ranking on length
+        # alone let a long historical run outrank the series carrying the newest
+        # readings and, sharing its label, crowd it out of the selection
+        # entirely: four products charted nothing past a period years before
+        # their latest release. Make room for one series that reaches the end.
+        if chosen:
+            newest = max(r[9] for r in cand)
+            if not any(r[9] == newest for r in chosen):
+                for r in ranked:
+                    if r[9] != newest or labels_of(r) is None:
+                        continue
+                    if len(chosen) >= MAX_SERIES_PER_PRODUCT:
+                        chosen.pop()
+                    chosen.append(r)
+                    break
 
         series = []
         for r in chosen:

@@ -129,42 +129,117 @@ def main() -> int:
         FROM raw GROUP BY category_id
     """)
 
+    # A series has to keep one identity across releases. Two pieces of metadata
+    # drift between them, and both were part of the key, so one measure came
+    # apart into several runs:
+    #
+    #   - The Arabic label. Some releases carry it and some do not, so a release
+    #     that omitted it started a fresh series. Arabic names the same row the
+    #     English does; it only carries identity when there is no English label.
+    #   - The index base. Older workbooks often do not state "2023 = 100" where
+    #     the parser can see it, which left those readings on an empty base.
+    #
+    # Together they split Real Estate's residential index into three runs ending
+    # 2024-Q3, 2025-Q2 and 2026-Q2. The site charts one series per label, so it
+    # showed a line stopping eighteen months before the data did.
+    con.execute(r"""
+        CREATE MACRO ident(en, ar) AS
+            coalesce(nullif(coalesce(fold(en), ''), ''), coalesce(fold(ar), ''), '');
+    """)
+
+    # Everything that identifies a measure except which base its index is on.
+    con.execute("""
+        CREATE TABLE ident_raw AS
+        SELECT *,
+               md5(category_id || '|' || ident(row_en, row_ar) || '|' || ident(col_en, col_ar)
+                   || '|' || coalesce(kind, '') || '|' || coalesce(fold("table"), '')
+               ) AS measure_key
+        FROM raw
+    """)
+
+    # An undeclared base is folded into a declared one only where the two agree
+    # on the periods they share. A rebased index does not agree -- that is what
+    # a rebase is -- so a genuine break stays two series instead of being
+    # spliced into one plausible-looking line.
+    con.execute("""
+        CREATE TABLE base_merge AS
+        WITH declared AS (
+            SELECT measure_key, any_value(index_base) AS base
+            FROM ident_raw WHERE coalesce(index_base, '') <> ''
+            GROUP BY measure_key HAVING COUNT(DISTINCT index_base) = 1
+        ),
+        blank AS (
+            SELECT measure_key, period, any_value(value) AS value
+            FROM ident_raw WHERE coalesce(index_base, '') = ''
+            GROUP BY measure_key, period
+        ),
+        known AS (
+            SELECT i.measure_key, i.period, any_value(i.value) AS value
+            FROM ident_raw i JOIN declared d USING (measure_key)
+            WHERE coalesce(i.index_base, '') <> ''
+            GROUP BY i.measure_key, i.period
+        ),
+        cmp AS (
+            SELECT b.measure_key, COUNT(*) AS shared,
+                   COUNT(*) FILTER (
+                       WHERE abs(b.value - k.value) <= 0.001 * GREATEST(abs(k.value), 1)
+                   ) AS agree
+            FROM blank b JOIN known k USING (measure_key, period)
+            GROUP BY b.measure_key
+        )
+        SELECT c.measure_key, d.base
+        FROM cmp c JOIN declared d USING (measure_key)
+        WHERE c.shared >= 2 AND c.agree = c.shared
+    """)
+
+    # A base belongs to an index and to nothing else. A percentage change is
+    # base-independent -- it means the same thing either side of a rebase -- so
+    # letting the base into the identity of a change or a level split those in
+    # two for no reason, which is what truncated Real Estate's quarterly change.
+    con.execute("""
+        CREATE TABLE obs AS
+        SELECT i.*,
+               CASE WHEN coalesce(i.kind, '') <> 'index' THEN ''
+                    WHEN coalesce(i.index_base, '') = '' THEN coalesce(m.base, '')
+                    ELSE i.index_base END AS base_norm
+        FROM ident_raw i LEFT JOIN base_merge m USING (measure_key)
+    """)
+
+    merged = con.execute("SELECT COUNT(*) FROM base_merge").fetchone()[0]
+    log.info("  folded an undeclared base into a declared one for %s measures", f"{merged:,}")
+
     con.execute("""
         CREATE TABLE dim_series AS
         SELECT
-            md5(category_id || '|' || coalesce(fold(row_en),'') || '|' || coalesce(fold(row_ar),'') || '|'
-                || coalesce(fold(col_en),'') || '|' || coalesce(kind,'') || '|'
-                || coalesce(index_base,'') || '|' || coalesce(fold("table"),'')) AS series_key,
+            md5(measure_key || '|' || base_norm) AS series_key,
             md5(category_id) AS product_key,
             category_id,
-            any_value(coalesce(row_en,'')) AS row_en, any_value(coalesce(row_ar,'')) AS row_ar,
-            any_value(coalesce(col_en,'')) AS col_en, any_value(coalesce(col_ar,'')) AS col_ar,
-            coalesce(kind,'') AS kind, coalesce(index_base,'') AS index_base,
+            -- A release that omits a label must not blank out the name the
+            -- other releases carry, so take a non-empty one where any exists.
+            coalesce(max(nullif(row_en, '')), '') AS row_en,
+            coalesce(max(nullif(row_ar, '')), '') AS row_ar,
+            coalesce(max(nullif(col_en, '')), '') AS col_en,
+            coalesce(max(nullif(col_ar, '')), '') AS col_ar,
+            coalesce(kind, '') AS kind,
+            base_norm AS index_base,
             any_value(period_type) AS period_type, any_value("table") AS table_name
-        FROM raw
-        GROUP BY category_id, coalesce(fold(row_en),''), coalesce(fold(row_ar),''),
-                 coalesce(fold(col_en),''), coalesce(kind,''), coalesce(index_base,''),
-                 coalesce(fold("table"),'')
+        FROM obs
+        GROUP BY category_id, measure_key, base_norm, coalesce(kind, '')
     """)
 
     # One reading per (series, period): the latest release that reports it.
     con.execute("""
         CREATE TABLE fact_observation AS
         WITH keyed AS (
-            SELECT md5(category_id || '|' || coalesce(fold(row_en),'') || '|' || coalesce(fold(row_ar),'') || '|'
-                       || coalesce(fold(col_en),'') || '|' || coalesce(kind,'') || '|'
-                       || coalesce(index_base,'') || '|' || coalesce(fold("table"),'')) AS series_key,
+            SELECT md5(measure_key || '|' || base_norm) AS series_key,
                    md5(category_id || '|' || pub_id) AS release_key,
                    md5(category_id) AS product_key,
                    period, period_type, value, weight_pct, "table" AS table_name,
                    row_number() OVER (
-                       PARTITION BY category_id, coalesce(fold(row_en),''),
-                                    coalesce(fold(row_ar),''), coalesce(fold(col_en),''),
-                                    coalesce(kind,''), coalesce(index_base,''),
-                                    coalesce(fold("table"),''), period
+                       PARTITION BY measure_key, base_norm, period
                        ORDER BY pub_id DESC
                    ) AS rn
-            FROM raw
+            FROM obs
         )
         SELECT series_key, release_key, product_key, period, period_type,
                value, weight_pct, table_name
@@ -174,19 +249,14 @@ def main() -> int:
     con.execute("""
         CREATE TABLE fact_revision AS
         WITH keyed AS (
-            SELECT md5(category_id || '|' || coalesce(fold(row_en),'') || '|' || coalesce(fold(row_ar),'') || '|'
-                       || coalesce(fold(col_en),'') || '|' || coalesce(kind,'') || '|'
-                       || coalesce(index_base,'') || '|' || coalesce(fold("table"),'')) AS series_key,
+            SELECT md5(measure_key || '|' || base_norm) AS series_key,
                    md5(category_id || '|' || pub_id) AS release_key,
                    period, value,
                    row_number() OVER (
-                       PARTITION BY category_id, coalesce(fold(row_en),''),
-                                    coalesce(fold(row_ar),''), coalesce(fold(col_en),''),
-                                    coalesce(kind,''), coalesce(index_base,''),
-                                    coalesce(fold("table"),''), period
+                       PARTITION BY measure_key, base_norm, period
                        ORDER BY pub_id DESC
                    ) AS rn
-            FROM raw
+            FROM obs
         )
         SELECT series_key, release_key, period, value, rn AS revision_age
         FROM keyed WHERE rn > 1
