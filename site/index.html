@@ -191,6 +191,8 @@ const T={
   h_map:"Regions",
   p_map:"Pick a region to see where it stands. Each figure is read from one named GASTAT table and checked against the published workbook, so it can be traced back cell by cell.",
   reg_trend:"History",reg_rank:"All regions",reg_region:"Region",
+  reg_shape:"Where it sits",reg_shapep:"Shaded by the selected indicator. Click a region to select it.",
+  reg_cmp:"Side by side",
   reg_short:"Too few readings to draw a line for this indicator.",
   reg_none:"No regional indicators in this build.",
   reg_note:"Prices and real estate are index numbers on 2023 = 100, so they compare a region with its own past, not with another region's price level. Unemployment is a rate and is comparable across regions.",
@@ -243,6 +245,8 @@ const T={
   h_map:"المناطق",
   p_map:"اختر منطقة لعرض مؤشراتها. كل رقم مقروء من جدول محدد لدى الهيئة ومطابق للملف المنشور، بحيث يمكن تتبعه خلية بخلية.",
   reg_trend:"السلسلة الزمنية",reg_rank:"كل المناطق",reg_region:"المنطقة",
+  reg_shape:"الموقع",reg_shapep:"التظليل حسب المؤشر المختار. اضغط منطقة لاختيارها.",
+  reg_cmp:"مقارنة",
   reg_short:"القراءات أقل من أن تُرسم كخط لهذا المؤشر.",
   reg_none:"لا توجد مؤشرات إقليمية في هذه النسخة.",
   reg_note:"أرقام الأسعار والعقارات قياسية على أساس 2023 = 100، فهي تقارن المنطقة بماضيها لا بمستوى أسعار منطقة أخرى. أما البطالة فهي معدل قابل للمقارنة بين المناطق.",
@@ -369,9 +373,11 @@ const dname=d=>L==="ar"?(DOM_AR[d]||d):d;
 const bname=b=>(L==="ar"&&b.row_ar)?b.row_ar:b.row;
 
 function disposeCharts(){charts.forEach(c=>{try{c.dispose()}catch(e){}});charts=[];}
-function mkChart(el,opt){
+function mkChart(el,opt,on){
   const c=echarts.init(el,null,{renderer:"svg"});
-  c.setOption(opt); charts.push(c); return c;}
+  c.setOption(opt);
+  if(on)for(const k in on)c.on(k,on[k]);
+  charts.push(c); return c;}
 function axis(){
   return {ink:cvar("--ink2"),muted:cvar("--ink3"),line:cvar("--line"),card:cvar("--card")};
 }
@@ -675,17 +681,27 @@ function vMap(){
       </div>`}).join("")}
   </div>
 
-  <div class="grid g2">
-    <div class="card">
-      <div class="row" style="justify-content:space-between;margin-bottom:10px">
-        <h2 style="margin:0">${esc(T_.reg_trend)}</h2>
-        <div class="srow" id="regind" style="min-width:250px">
-          ${order.map(id=>`<button data-i="${esc(id)}" class="${id===regSel.ind?"on":""}">${esc(L==="ar"?cur.ind[id].ar:cur.ind[id].en)}</button>`).join("")}
-        </div>
+  <div class="srow" id="regind" style="margin-bottom:14px">
+    ${order.map(id=>`<button data-i="${esc(id)}" class="${id===regSel.ind?"on":""}">${esc(L==="ar"?cur.ind[id].ar:cur.ind[id].en)}</button>`).join("")}
+  </div>
+
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card pad0">
+      <div style="padding:16px 18px 0">
+        <h2>${esc(T_.reg_shape)}</h2>
+        <p class="muted" style="margin:4px 0 0">${esc(T_.reg_shapep)}</p>
       </div>
-      ${chart?`<div class="chart" id="c-regtrend"></div>`
+      <div class="chart" id="c-regmap" style="height:330px"></div>
+    </div>
+    <div class="card">
+      <h2 style="margin:0 0 4px">${esc(T_.reg_trend)}</h2>
+      <p class="muted" style="margin:0 0 6px">${esc(rname(cur))}</p>
+      ${chart?`<div class="chart" id="c-regtrend" style="height:300px"></div>`
              :`<p class="muted">${esc(T_.reg_short)}</p>`}
     </div>
+  </div>
+
+  <div class="grid g2">
     <div class="card pad0">
       <div style="padding:16px 18px 0"><h2>${esc(T_.reg_rank)}</h2>
         <p class="muted" style="margin:4px 0 0">${esc(L==="ar"?cur.ind[regSel.ind].ar:cur.ind[regSel.ind].en)} — ${esc(plabel(cur.ind[regSel.ind].period))}</p></div>
@@ -695,6 +711,11 @@ function vMap(){
           <td><a href="#" data-goto="${esc(x.code)}">${esc(x.name)}</a></td>
           <td style="text-align:end" class="mono">${esc(fmtNum(x.v,x.unit,x.signed))}</td></tr>`).join("")}
       </tbody></table></div>
+    </div>
+    <div class="card">
+      <h2 style="margin:0 0 4px">${esc(T_.reg_cmp)}</h2>
+      <p class="muted" style="margin:0 0 6px">${esc(L==="ar"?cur.ind[regSel.ind].ar:cur.ind[regSel.ind].en)}</p>
+      <div class="chart" id="c-regbars" style="height:300px"></div>
     </div>
   </div>
   <p class="muted" style="margin:12px 0 0">${esc(T_.reg_note)}</p>`;
@@ -710,6 +731,41 @@ function fmtNum(v,unit,signed){
 
 function drawRegions(){
   const regs=D.regions||[]; const cur=regs.find(r=>r.code===regSel.code);
+  const rank=regionRank(regSel.ind);
+  const unit=cur?cur.ind[regSel.ind].unit:"", signed=cur?cur.ind[regSel.ind].signed:false;
+
+  // The choropleth. It is a selector and a shape-of-the-country read, not the
+  // page's headline: the figures are already above it. Geometry is keyed by
+  // region code, so it joins the indicator without matching names.
+  if(geoJson&&$("#c-regmap")&&rank.length){
+    const vals=rank.map(x=>x.v);
+    mkChart($("#c-regmap"),{backgroundColor:"transparent",animation:false,
+      tooltip:{trigger:"item",formatter:p=>p.data?`${p.data.label}<br/><b>${fmtNum(p.data.value,unit,signed)}</b>`:p.name},
+      visualMap:{min:Math.min(...vals),max:Math.max(...vals),calculable:false,
+        orient:"horizontal",left:"center",bottom:6,itemWidth:12,itemHeight:90,
+        textStyle:{color:cvar("--ink2"),fontSize:11},
+        inRange:{color:[cvar("--accdim"),cvar("--acc")]}},
+      series:[{type:"map",map:"sau",roam:false,
+        left:10,right:10,top:10,bottom:44,
+        itemStyle:{borderColor:cvar("--line"),borderWidth:1},
+        // The selected region is marked by its OUTLINE, never by its fill. The
+        // fill carries the indicator, and ECharts' own select state paints the
+        // region gold, which reads as a value the region does not have. So
+        // selection is disabled and the border is set on the datum instead.
+        emphasis:{label:{show:false},itemStyle:{borderColor:cvar("--acc2"),borderWidth:2}},
+        selectedMode:false,
+        data:rank.map(x=>({name:x.code,label:x.name,value:x.v,
+          itemStyle:x.code===regSel.code
+            ?{borderColor:cvar("--ink"),borderWidth:2.5}:undefined}))}]},
+      {click:p=>{ if(p&&p.name){ regSel.code=p.name; disposeCharts(); render(); } }});
+  }
+
+  // The same numbers as bars, because a choropleth reads area and a reader
+  // comparing thirteen regions needs length.
+  if($("#c-regbars")&&rank.length){
+    mkChart($("#c-regbars"),barOpt(rank.slice().reverse().map(x=>({label:x.name,value:x.v}))));
+  }
+
   if(cur&&cur.series[regSel.ind]&&$("#c-regtrend")){
     const pts=cur.series[regSel.ind];
     mkChart($("#c-regtrend"),lineOpt(
@@ -972,9 +1028,11 @@ function render(){
   else if(h==="/catalogue"){v.innerHTML=vCatalogue();}
   else if(h==="/explore"){v.innerHTML=vExplore(); drawExplore();}
   else if(h==="/data"){v.innerHTML=vData(); wireData();}
-  // The regions view reads app.json, which is already loaded, so unlike the
-  // choropleth it needs no second fetch before it can render.
-  else if(h==="/map"){v.innerHTML=vMap(); drawRegions();}
+  // The cards and the ranking come from app.json, which is already loaded, so
+  // the view renders at once and the map fills in when the geometry arrives.
+  else if(h==="/map"){v.innerHTML=vMap(); drawRegions();
+    if(!geoJson)loadGeo().then(ok=>{
+      if(ok&&(location.hash||"#/").slice(1)==="/map"){disposeCharts(); drawRegions();}});}
   else if(h==="/lens"){
     if(!G){loadGeo().then(()=>{ if((location.hash||"#/").slice(1)==="/lens") v.innerHTML=vLens(); });}
     v.innerHTML=vLens();}

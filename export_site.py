@@ -215,6 +215,24 @@ REGION_INDICATORS = [
      "note_en": "Saudi nationals only", "note_ar": "السعوديون فقط",
      "category": "417515", "table": "2-4", "mode": "row", "col": "saudi total",
      "unit": "%", "dp": 2},
+    # Counts rather than rates. Each note says exactly what the source counts:
+    # the housing table is Saudi households only, not every dwelling, and the
+    # workers table counts people on the job rather than the labour force.
+    {"id": "workers", "en": "Workers on the job", "ar": "المشتغلون",
+     "note_en": "Register-based, Saudi and non-Saudi",
+     "note_ar": "من السجلات الإدارية، سعوديون وغير سعوديين",
+     "category": "124074", "table": "3-4", "mode": "row", "col": "total",
+     "unit": "", "dp": 0},
+    {"id": "housing", "en": "Housing units", "ar": "المساكن",
+     "note_en": "Occupied by Saudi households",
+     "note_ar": "المشغولة بأسر سعودية",
+     "category": "3175009", "table": "1", "mode": "row", "col": "total",
+     "unit": "", "dp": 0},
+    {"id": "power", "en": "Residential electricity", "ar": "الكهرباء السكنية",
+     "note_en": "Energy sold, gigawatt-hours",
+     "note_ar": "الطاقة المباعة، جيجاوات ساعة",
+     "category": "124767", "table": "7", "mode": "row", "col": "residential",
+     "unit": " GWh", "dp": 0},
 ]
 
 
